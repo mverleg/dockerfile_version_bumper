@@ -101,10 +101,25 @@ fn extract_parents(dockerfiles: &[Dockerfile]) -> HashSet<Parent> {
 
 fn parse_line_from(line: &str) -> Option<Parent> {
     match FROM_RE.captures(line) {
-        Some(matches) => Some(Parent::from((&matches[0], &matches[1], &matches[2]))),
+        Some(matches) => Some(Parent::from((&matches[1], &matches[2], &matches[3]))),
         None => {
-            warn!("warning: FROM line, but could not recognize version:\n  {}", line);
+            if line.contains(":") {
+                warn!("warning: FROM line, but could not recognize version:\n  {}", line);
+            } else {
+                info!("skipping line because there is no version: {}", line);
+            }
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_from_version_as() {
+        let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap();
+        assert_eq!(parent, Parent::from(("node", "lts-alpine3.14", "AS editor")))
     }
 }

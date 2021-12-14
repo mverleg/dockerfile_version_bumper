@@ -1,0 +1,26 @@
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "deny"
+notice = "deny"
+unsound = "deny"
+
+[bans]
+multiple-versions = "deny"
+deny = []
+skip = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = []
+
+[licenses]
+allow-osi-fsf-free = "both"
+copyleft = "deny"
+confidence-threshold = 0.95
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "CC0-1.0",
+]

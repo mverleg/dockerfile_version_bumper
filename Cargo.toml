@@ -1,0 +1,36 @@
+[package]
+name = "dockerfile_version_bumper"
+version = "0.1.0"
+description = "Simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version."
+edition = "2021"
+publish = true
+license = "Apache-2.0"
+
+[[bin]]
+name = "dockerfile_version_bumper"
+path = "src/main.rs"
+
+[lib]
+name = "dockerfile_version_bumper"
+path = "src/lib.rs"
+
+[features]
+jemalloc = ["jemallocator"]
+
+[dependencies]
+log = "0.4"
+env_logger = "0.9"
+structopt = { version = "0.3" }
+regex = "1.5.4"
+lazy_static = "1.4.0"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+jemallocator = { version = "0.3", optional = true }
+
+[profile.release]
+lto = "thin"
+opt-level = 3
+
+[profile.dev.package."*"]
+opt-level = 3
+

@@ -14,7 +14,7 @@ mod args;
 fn main() {
     env_logger::init();
     let args = Args::from_args();
-    match bump_dockerfiles(&args.dockerfiles, &args.parents, args.bump_major) {
+    match bump_dockerfiles(&args.dockerfiles, &args.parents, args.bump_major, args.print) {
         Ok(()) => {
             eprintln!("done")
         }

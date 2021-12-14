@@ -14,4 +14,6 @@ pub struct Args {
     pub parents: Vec<String>,
     #[structopt(long = "major", help = "Allow bumping to new major versions (which might be incompatible), which is interpreted as the leading number in the version.")]
     pub bump_major: bool,
+    #[structopt(long = "print", short = "d", help = "Print the output instead of updating in-place (dry run).")]
+    pub print: bool,
 }

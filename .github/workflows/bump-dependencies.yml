@@ -32,7 +32,7 @@ jobs:
       - name: Cargo bump
         if: hashFiles('Cargo.toml') != ''
         run: |
-          printf 'FROM mverleg/rust_nightly_musl_base:latest\n' > ./bump-dependencies.Dockerfile
+          printf 'FROM mverleg/rust_nightly_musl_base:nodeps\n' > ./bump-dependencies.Dockerfile
           printf 'COPY ./ ./\n' >> ./bump-dependencies.Dockerfile
           printf 'RUN cargo upgrade && cargo update\n' >> ./bump-dependencies.Dockerfile
           printf 'RUN cargo --offline outdated --exit-code 1\n' >> ./bump-dependencies.Dockerfile

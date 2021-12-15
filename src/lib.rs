@@ -13,7 +13,7 @@ lazy_static! {
     static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
 }
 
-pub fn bump_dockerfiles(
+pub async fn bump_dockerfiles(
     dockerfiles: &[PathBuf],
     allow_parents: &[String],
     bump_major: bool,
@@ -21,9 +21,10 @@ pub fn bump_dockerfiles(
 ) -> Result<(), String> {
     assert!(bump_major, "bumping only minor versions not implemented, use --major");
     assert!(print, "in-place update not implemented, use --print");
-    let dockerfiles = read_all_dockerfiles(dockerfiles)?;
+    let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
     let all_parents = extract_parents(&dockerfiles);
-    let parents = filter_parents(all_parents, allow_parents);
+    let parents = filter_parents(all_parents, allow_parents)?;
+    //https://registry.hub.docker.com/v1/repositories/${img}/tags
     unimplemented!()
 }
 
@@ -33,7 +34,7 @@ struct Dockerfile {
     content: String,
 }
 
-fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {
+async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {
     dockerfiles.iter()
         .map(|path| read_dockerfile(path.as_path()))
         .collect::<Result<Vec<_>, _>>()

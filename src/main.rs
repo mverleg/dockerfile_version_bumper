@@ -1,7 +1,10 @@
-use std::process::exit;
+use ::std::process::exit;
+
 use ::env_logger;
 use ::structopt::StructOpt;
-use dockerfile_version_bumper::bump_dockerfiles;
+use ::tokio;
+
+use ::dockerfile_version_bumper::bump_dockerfiles;
 
 use crate::args::Args;
 
@@ -11,10 +14,11 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 mod args;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
     let args = Args::from_args();
-    match bump_dockerfiles(&args.dockerfiles, &args.parents, args.bump_major, args.print) {
+    match bump_dockerfiles(&args.dockerfiles, &args.parents, args.bump_major, args.print).await {
         Ok(()) => {
             eprintln!("done")
         }

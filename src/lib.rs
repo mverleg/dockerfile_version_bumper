@@ -1,16 +1,17 @@
+use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 use ::std::fmt;
 use ::std::fs::read_to_string;
 use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
-use ::std::collections::HashMap;
-use ::futures::{stream, StreamExt};
-use ::reqwest::Client;
 
+use ::futures::{stream, StreamExt, TryStreamExt};
+use ::futures::{FutureExt, TryFutureExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
+use ::reqwest::Client;
 
 lazy_static! {
     static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
@@ -143,9 +144,11 @@ async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent,
     let urls = vec!["https://api.ipify.org"; 2];
 
     let tags = stream::iter(parents.iter()
-        .map(|parent| format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name)))
-        .map(|url| load_tags(&client, &url))
-        .buffer_unordered(16);
+        .map(|parent| (parent, format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name))))
+        .map(|(parent, url)| load_tags(&client, &url).and_then(|tags| (parent, tags)))
+        .buffer_unordered(16)
+        .map_ok(|(parent, tags)| (parent, choose_tag(&parent, &tags)))
+        .collect();
 
     unimplemented!()
 }
@@ -157,6 +160,10 @@ async fn load_tags(client: &Client, url: &str) -> Result<Vec<String>, String> {
         format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
     //TODO @mark: parse json
     unimplemented!();
+}
+
+fn choose_tag() {
+    unimplemented!()
 }
 
 #[cfg(test)]

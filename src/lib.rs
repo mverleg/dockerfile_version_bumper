@@ -4,6 +4,9 @@ use ::std::fs::read_to_string;
 use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
+use ::std::collections::HashMap;
+use ::futures::{stream, StreamExt};
+use ::reqwest::Client;
 
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
@@ -24,7 +27,7 @@ pub async fn bump_dockerfiles(
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
     let all_parents = extract_parents(&dockerfiles);
     let parents = filter_parents(all_parents, allow_parents)?;
-    //https://registry.hub.docker.com/v1/repositories/${img}/tags
+    let available_tags = find_available_tags(parents).await?;
     unimplemented!()
 }
 
@@ -35,6 +38,7 @@ struct Dockerfile {
 }
 
 async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {
+    //TODO @mark: async
     dockerfiles.iter()
         .map(|path| read_dockerfile(path.as_path()))
         .collect::<Result<Vec<_>, _>>()
@@ -133,6 +137,27 @@ fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -
     Ok(parents)
 }
 
+async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent, Vec<String>>, String> {
+    let client = Client::new();
+
+    let urls = vec!["https://api.ipify.org"; 2];
+
+    let tags = stream::iter(parents.iter()
+        .map(|parent| format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name)))
+        .map(|url| load_tags(&client, &url))
+        .buffer_unordered(16);
+
+    unimplemented!()
+}
+
+async fn load_tags(client: &Client, url: &str) -> Result<Vec<String>, String> {
+    let resp = client.get(url).send().await.map_err(|err|
+        format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
+    let data = resp.bytes().await.map_err(|err|
+        format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
+    //TODO @mark: parse json
+    unimplemented!();
+}
 
 #[cfg(test)]
 mod tests {

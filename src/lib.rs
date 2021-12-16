@@ -2,12 +2,12 @@ use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 use ::std::fmt;
 use ::std::fs::read_to_string;
+use ::std::future::Future;
 use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
-use std::future::Future;
 
-use ::futures::{stream, StreamExt, FutureExt, TryFutureExt};
+use ::futures::{FutureExt, stream, StreamExt, TryFutureExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
@@ -144,9 +144,13 @@ async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent,
     let urls = vec!["https://api.ipify.org"; 2];
 
     let tags = stream::iter(parents.into_iter()
-        .map(|parent| (parent, format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name))))
-        .then(|(parent, url)| load_tags(&client, &url).map(|tags| (parent, tags)))
+        .map(|parent| (format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name), parent)))
+        .map(|(url, parent)| load_tags(&client, url))
+        //.then(|(parent, url)| load_tags(&client, &url).map(|tags_res| tags_res.map(|tags| (parent, tags))))
         .buffer_unordered(16);
+
+        // .collect::<Result<Vec<_>, String>>()
+        // .await;
 
         // .map(|(parent, tags)| (parent, choose_tag(&parent, &tags)))
         // .collect::<Result<Vec<_>>>();
@@ -154,13 +158,13 @@ async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent,
     unimplemented!()
 }
 
-fn load_tags(client: &Client, url: &str) -> impl Future<Output=Result<Vec<String>, String>> {
-    let resp = client.get(url).send().await.map_err(|err|
-        format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
+async fn load_tags(client: &Client, url: String) -> Result<Vec<String>, String> {
+    let resp = client.get(&url).send().await.map_err(|err|
+        format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
     let data = resp.bytes().await.map_err(|err|
-        format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
+        format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
     //TODO @mark: parse json
-    unimplemented!();
+    unimplemented!()
 }
 
 fn choose_tag(parent: &Parent, tags: &str) {

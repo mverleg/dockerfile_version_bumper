@@ -5,9 +5,9 @@ use ::std::fs::read_to_string;
 use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
+use std::future::Future;
 
-use ::futures::{stream, StreamExt, TryStreamExt};
-use ::futures::{FutureExt, TryFutureExt};
+use ::futures::{stream, StreamExt, FutureExt, TryFutureExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
@@ -143,17 +143,18 @@ async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent,
 
     let urls = vec!["https://api.ipify.org"; 2];
 
-    let tags = stream::iter(parents.iter()
+    let tags = stream::iter(parents.into_iter()
         .map(|parent| (parent, format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name))))
-        .map(|(parent, url)| load_tags(&client, &url).and_then(|tags| (parent, tags)))
-        .buffer_unordered(16)
-        .map_ok(|(parent, tags)| (parent, choose_tag(&parent, &tags)))
-        .collect();
+        .then(|(parent, url)| load_tags(&client, &url).map(|tags| (parent, tags)))
+        .buffer_unordered(16);
+
+        // .map(|(parent, tags)| (parent, choose_tag(&parent, &tags)))
+        // .collect::<Result<Vec<_>>>();
 
     unimplemented!()
 }
 
-async fn load_tags(client: &Client, url: &str) -> Result<Vec<String>, String> {
+fn load_tags(client: &Client, url: &str) -> impl Future<Output=Result<Vec<String>, String>> {
     let resp = client.get(url).send().await.map_err(|err|
         format!("Failed to request available Docker image tags: err {} for {}", err, url))?;
     let data = resp.bytes().await.map_err(|err|
@@ -162,7 +163,7 @@ async fn load_tags(client: &Client, url: &str) -> Result<Vec<String>, String> {
     unimplemented!();
 }
 
-fn choose_tag() {
+fn choose_tag(parent: &Parent, tags: &str) {
     unimplemented!()
 }
 

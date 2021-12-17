@@ -42,7 +42,7 @@ fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -
     }
     let allow_parent_names: HashSet<String> = HashSet::from_iter(allow_parent_names.iter().cloned());
     let parents = all_parents.into_iter()
-        .filter(|parent| allow_parent_names.contains(&parent.name))
+        .filter(|parent| allow_parent_names.contains(parent.name()))
         .inspect(|parent| debug!("including parent (-p): {}", parent))
         .collect::<HashSet<_>>();
     if parents.is_empty() {
@@ -61,7 +61,7 @@ async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent,
     //     .map(|future_content| ()).await;
 
     let tags = stream::iter(parents.into_iter()
-        .map(|parent| (format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name), parent)))
+        .map(|parent| (format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name()), parent)))
         // .map(|(url, parent)| load_tags(&client, url))
         //.then(|(url, parent)| load_tags(&client, url).map(|tags_res| tags_res.map(|tags| (parent, tags))))
         //.then(|(url, parent)| load_tags(&client, url).map(|tags_res| (parent, tags_res.unwrap())))

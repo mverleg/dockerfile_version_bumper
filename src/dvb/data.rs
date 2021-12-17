@@ -7,19 +7,21 @@ use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
+use ::derive_getters::Getters;
+use ::derive_new::new;
 use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
 use ::reqwest::Client;
 
-#[derive(Debug)]
-struct Dockerfile {
+#[derive(Debug, Getters, new)]
+pub struct Dockerfile {
     path: PathBuf,
     content: String,
 }
 
-#[derive(Debug, Eq)]
+#[derive(Debug, Eq, Getters, new)]
 pub struct Parent {
     name: String,
     version: String,

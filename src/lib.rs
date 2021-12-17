@@ -7,7 +7,7 @@ use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
-use ::futures::{FutureExt, stream, StreamExt, TryFutureExt};
+use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
@@ -141,13 +141,32 @@ fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -
 async fn find_available_tags(parents: HashSet<Parent>) -> Result<HashMap<Parent, Vec<String>>, String> {
     let client = Client::new();
 
-    let urls = vec!["https://api.ipify.org"; 2];
+    let future = async { 1 };
+    let new_future = future.map(|x| x + 3);
+
+    // let q = load_tags(&client, "https://registry.hub.docker.com/v1/repositories/".to_owned())
+    //     .map(|future_content| ()).await;
 
     let tags = stream::iter(parents.into_iter()
         .map(|parent| (format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name), parent)))
-        .map(|(url, parent)| load_tags(&client, url))
-        //.then(|(parent, url)| load_tags(&client, &url).map(|tags_res| tags_res.map(|tags| (parent, tags))))
-        .buffer_unordered(16);
+        // .map(|(url, parent)| load_tags(&client, url))
+        //.then(|(url, parent)| load_tags(&client, url).map(|tags_res| tags_res.map(|tags| (parent, tags))))
+        //.then(|(url, parent)| load_tags(&client, url).map(|tags_res| (parent, tags_res.unwrap())))
+        .map(|(url, parent)| load_tags(&client, url)
+            .map(|tags_res| tags_res.map(|tags| (tags, parent))))
+        //TODO @mark: increase to 16
+        .buffer_unordered(2)
+        .try_collect::<Vec<_>>()
+        .await;
+
+        // .map();
+        //.into_future().await;
+        // https://stackoverflow.com/questions/46041185/how-do-i-append-futures-to-a-bufferunordered-stream
+        //.into_iter()
+        //.and_then(|(tags, parent)| (parent, choose_tag(&tags, &parent)));
+        //.collect::<Result<Vec<_>, String>>()
+        // .collect();
+        // .await;
 
         // .collect::<Result<Vec<_>, String>>()
         // .await;
@@ -164,7 +183,7 @@ async fn load_tags(client: &Client, url: String) -> Result<Vec<String>, String> 
     let data = resp.bytes().await.map_err(|err|
         format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
     //TODO @mark: parse json
-    unimplemented!()
+    Ok(vec![])  //TODO @mark: TEMPORARY! REMOVE THIS!
 }
 
 fn choose_tag(parent: &Parent, tags: &str) {

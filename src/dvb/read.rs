@@ -1,9 +1,5 @@
-use ::std::collections::HashMap;
 use ::std::collections::HashSet;
-use ::std::fmt;
 use ::std::fs::read_to_string;
-use ::std::future::Future;
-use ::std::hash;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
@@ -11,13 +7,14 @@ use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
-use ::reqwest::Client;
+
 use crate::Parent;
 
 use super::data::Dockerfile;
 
 lazy_static! {
     static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
+    static ref TAG_RE: Regex = Regex::new(r"^$").unwrap();
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {

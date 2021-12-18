@@ -1,10 +1,7 @@
-use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 use ::std::path::PathBuf;
 
-use ::futures::{FutureExt, stream, StreamExt, TryStreamExt};
 use ::log::debug;
-use ::reqwest::Client;
 
 use crate::dvb::data::Parent;
 use crate::dvb::read::{extract_parents, read_all_dockerfiles};

@@ -28,6 +28,7 @@ reqwest = "0.11.7"
 futures = "0.3.17"
 derive-getters = "0.2.0"
 derive-new = "0.5.9"
+itertools = "0.10.1"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = { version = "0.3.2", optional = true }

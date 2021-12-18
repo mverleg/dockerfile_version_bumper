@@ -15,7 +15,7 @@ use super::data::Dockerfile;
 
 lazy_static! {
     static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
-    static ref TAG_DIGITS_RE: Regex = Regex::new(r"^[0-9]+$").unwrap();
+    static ref TAG_DIGITS_RE: Regex = Regex::new(r"[0-9]+").unwrap();
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {
@@ -68,7 +68,9 @@ fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
 //TODO @mark: test
 fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     let tag_escaped_for_re = &tag_str.replace("-", r"\-");
+    dbg!(tag_str);  //TODO @mark: TEMPORARY! REMOVE THIS!
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
+    dbg!(tag_digits_replaced.as_ref());  //TODO @mark: TEMPORARY! REMOVE THIS!
     let regex = Regex::new(tag_digits_replaced.as_ref())
         .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err))?;
     Ok(regex)
@@ -86,13 +88,13 @@ mod tests {
     fn parse_from_version_date() {
         let parent = parse_line_from("FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
         assert_eq!(parent, Parent::new("mverleg/rust_nightly_musl_base".to_owned(),
-            Regex::new("2021-10-17_11").unwrap(), Tag::new((2021, 10, 17, 11)), "".to_owned()));
+            Regex::new(r"2021-10-17_11").unwrap(), Tag::new((2021, 10, 17, 11)), "".to_owned()));
     }
 
     #[test]
     fn parse_from_version_as() {
         let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
         assert_eq!(parent, Parent::new("node".to_owned(),
-            Regex::new("lts-alpine3.14").unwrap(), Tag::new((3, 14, 0, 0)), "AS editor".to_owned()));
+            Regex::new(r"lts-alpine3.14").unwrap(), Tag::new((3, 14, 0, 0)), "AS editor".to_owned()));
     }
 }

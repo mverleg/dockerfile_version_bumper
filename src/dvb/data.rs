@@ -56,6 +56,12 @@ pub struct Tag {
     nrs: (u32, u32, u32, u32,),
 }
 
+impl Tag {
+    pub fn major(&self) -> u32 {
+        self.nrs.0
+    }
+}
+
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}.{}.{}", self.nrs.0, self.nrs.1, self.nrs.2, self.nrs.3)

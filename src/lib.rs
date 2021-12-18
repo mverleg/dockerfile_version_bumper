@@ -20,7 +20,7 @@ pub async fn bump_dockerfiles(
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
     let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;
-    let available_tags = find_latest_tag(parents, bump_major).await?;
+    let latest_tag = find_latest_tag(parents, bump_major).await?;
     unimplemented!()
 }
 

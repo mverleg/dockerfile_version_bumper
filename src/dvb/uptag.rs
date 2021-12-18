@@ -15,17 +15,17 @@ lazy_static! {
     static ref NAME_TAG_RE: Regex = Regex::new("\"name\":\\s*\"([^\"]*)\"").unwrap();
 }
 
-pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Result<HashMap<Parent, Vec<String>>, String> {
+pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Result<Vec<(Parent, Tag)>, String> {
     let client = Client::new();
 
-    let tags = stream::iter(parents.into_iter()
+    let latest_tags = stream::iter(parents.into_iter()
         .map(|parent| (format!("https://registry.hub.docker.com/v1/repositories/{}/tags", &parent.name()), parent)))
         .map(|(url, parent)| load_filter_tags(parent, &client, url, bump_major))
-        .buffer_unordered(16)
+        .buffer_unordered(8)
         .try_collect::<Vec<_>>()
         .await?;
 
-    unimplemented!()
+    Ok(latest_tags)
 }
 
 async fn load_filter_tags(parent: Parent, client: &Client, url: String, bump_major: bool) -> Result<(Parent, Tag), String> {
@@ -34,7 +34,7 @@ async fn load_filter_tags(parent: Parent, client: &Client, url: String, bump_maj
     Ok((parent, tag))
 }
 
-fn find_highest(parent: &Parent, data: &String, bump_major: bool) -> Result<Tag, String> {
+fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, String> {
     let tag = NAME_TAG_RE.captures_iter(&data)
         .filter(|tag| parent.tag_pattern().is_match(&tag[0]))
         .map(|tag| parse_tag(parent.tag_pattern(), &tag[0]).unwrap())
@@ -56,4 +56,36 @@ async fn request_tag_json(client: &Client, url: &String) -> Result<String, Strin
     let data = resp.text().await.map_err(|err|
         format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
     Ok(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    static TAGS_JSON: &'static str = "[\
+            {\"layer\": \"\", \"name\": \"2.5.1-full\"}, \
+            {\"layer\": \"\", \"name\": \"3.6.6-full\"}, \
+            {\"layer\": \"\", \"name\": \"2.4.1-alpine\"}, \
+            {\"layer\": \"\", \"name\": \"3.5.2-alpine\"}, \
+            {\"layer\": \"\", \"name\": \"1.9.9-alpine\"}]";
+
+    #[test]
+    fn bump_minor() {
+        let parent = Parent::new("".to_owned(),
+                Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
+                Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
+                "AS build".to_owned());
+        let highest = find_highest(&parent, TAGS_JSON, false);
+        assert_eq!(highest, Ok(Tag::new("2.4.1-alpine".to_owned(), (2, 4, 1, 0))));
+    }
+
+    #[test]
+    fn bump_major() {
+        let parent = Parent::new("".to_owned(),
+                Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
+                Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
+                "AS build".to_owned());
+        let highest = find_highest(&parent, TAGS_JSON, true);
+        assert_eq!(highest, Ok(Tag::new("3.5.2-alpine".to_owned(), (3, 5, 2, 0))));
+    }
 }

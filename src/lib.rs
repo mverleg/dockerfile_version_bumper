@@ -1,20 +1,13 @@
 use ::std::collections::HashMap;
 use ::std::collections::HashSet;
-use ::std::fmt;
-use ::std::fs::read_to_string;
-use ::std::future::Future;
-use ::std::hash;
-use ::std::path::Path;
 use ::std::path::PathBuf;
 
 use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
-use ::lazy_static::lazy_static;
-use ::log::{debug, info, warn};
-use ::regex::Regex;
+use ::log::debug;
 use ::reqwest::Client;
-use dvb::data::Parent;
 
-use dvb::read::{extract_parents, read_all_dockerfiles};
+use crate::dvb::data::Parent;
+use crate::dvb::read::{extract_parents, read_all_dockerfiles};
 
 mod dvb;
 

@@ -1,21 +1,12 @@
-use ::std::collections::HashMap;
-use ::std::collections::HashSet;
+use ::std::cmp::Ordering;
 use ::std::fmt;
-use ::std::fs::read_to_string;
-use ::std::future::Future;
 use ::std::hash;
-use ::std::path::Path;
+use ::std::hash::Hasher;
 use ::std::path::PathBuf;
-use std::cmp::Ordering;
-use std::hash::Hasher;
 
 use ::derive_getters::Getters;
 use ::derive_new::new;
-use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
-use ::lazy_static::lazy_static;
-use ::log::{debug, info, warn};
 use ::regex::Regex;
-use ::reqwest::Client;
 
 #[derive(Debug, Getters, new)]
 pub struct Dockerfile {
@@ -62,7 +53,7 @@ pub struct Tag {
 
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}.{}.{}.{}", self.nrs[0], self.nrs[1], self.nrs[2], self.nrs[3])
+        write!(f, "{}.{}.{}.{}", self.nrs.0, self.nrs.1, self.nrs.2, self.nrs.3)
     }
 }
 
@@ -93,4 +84,8 @@ impl hash::Hash for Tag {
         state.write_u32(self.nrs.2);
         state.write_u32(self.nrs.3);
     }
+}
+
+pub fn parse_tag(re: &Regex, tag: &str) -> Tag {
+    let tag = tag_pattern.find(tag_str).ok_or_else(|| format!())?;
 }

@@ -65,7 +65,3 @@ async fn request_tag_json(client: &Client, url: &String) -> Result<String, Strin
         format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
     Ok(data)
 }
-
-fn choose_tag(parent: &Parent, tags: &str) {
-    unimplemented!()
-}

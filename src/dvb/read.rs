@@ -84,13 +84,13 @@ mod tests {
     fn parse_from_version_date() {
         let parent = parse_line_from("FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
         assert_eq!(parent, Parent::new("mverleg/rust_nightly_musl_base".to_owned(),
-            Regex::new(r"2021-10-17_11").unwrap(), Tag::new((2021, 10, 17, 11)), "".to_owned()));
+            Regex::new(r"2021-10-17_11").unwrap(), Tag::new("2021-10-17_11".to_owned(), (2021, 10, 17, 11)), "".to_owned()));
     }
 
     #[test]
     fn parse_from_version_as() {
         let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
         assert_eq!(parent, Parent::new("node".to_owned(),
-            Regex::new(r"lts-alpine3.14").unwrap(), Tag::new((3, 14, 0, 0)), "AS editor".to_owned()));
+            Regex::new(r"lts-alpine3.14").unwrap(), Tag::new("lts-alpine3.14".to_owned(), (3, 14, 0, 0)), "AS editor".to_owned()));
     }
 }

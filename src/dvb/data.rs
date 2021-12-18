@@ -52,6 +52,7 @@ impl hash::Hash for Parent {
 
 #[derive(Debug, Getters, new)]
 pub struct Tag {
+    name: String,
     nrs: (u32, u32, u32, u32,),
 }
 
@@ -90,15 +91,17 @@ impl hash::Hash for Tag {
     }
 }
 
-pub fn parse_tag(tag_pattern: &Regex, tag: &str) -> Result<Tag, String> {
-    let tag = tag_pattern.captures(tag)
-        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, failed to capture", tag, tag_pattern.as_str()))?;
-    Ok(Tag::new((
-        match_to_nr(tag.get(1)),
-        match_to_nr(tag.get(2)),
-        match_to_nr(tag.get(3)),
-        match_to_nr(tag.get(4)),
-    )))
+pub fn parse_tag(tag_pattern: &Regex, tag: impl Into<String>) -> Result<Tag, String> {
+    let tag = tag.into();
+    let parts = tag_pattern.captures(&tag)
+        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, failed to capture", &tag, tag_pattern.as_str()))?;
+    let nrs = (
+        match_to_nr(parts.get(1)),
+        match_to_nr(parts.get(2)),
+        match_to_nr(parts.get(3)),
+        match_to_nr(parts.get(4)),
+    );
+    Ok(Tag::new(tag, nrs))
 }
 
 fn match_to_nr(mtch: Option<Match>) -> u32 {

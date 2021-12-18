@@ -20,7 +20,7 @@ pub async fn bump_dockerfiles(
     assert!(bump_major, "bumping only minor versions not implemented, use --major");
     assert!(print, "in-place update not implemented, use --print");
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
-    let all_parents = extract_parents(&dockerfiles);
+    let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;
     let available_tags = find_available_tags(parents).await?;
     unimplemented!()

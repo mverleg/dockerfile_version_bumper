@@ -14,7 +14,7 @@ pub struct Dockerfile {
     content: String,
 }
 
-#[derive(Debug, Eq, Getters, new)]
+#[derive(Debug, Getters, new)]
 pub struct Parent {
     name: String,
     tag_pattern: Regex,
@@ -37,6 +37,8 @@ impl PartialEq for Parent {
         self.name == other.name && self.tag == other.tag
     }
 }
+
+impl Eq for Parent {}
 
 impl hash::Hash for Parent {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -86,6 +88,11 @@ impl hash::Hash for Tag {
     }
 }
 
-pub fn parse_tag(re: &Regex, tag: &str) -> Tag {
-    let tag = tag_pattern.find(tag_str).ok_or_else(|| format!())?;
+//TODO @mark: test
+pub fn parse_tag(tag_pattern: &Regex, tag: &str) -> Result<Tag, String> {
+    let tag = tag_pattern.find(tag)
+        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}", tag, tag_pattern.as_str()))?;
+    tag;
+
+    unimplemented!()
 }

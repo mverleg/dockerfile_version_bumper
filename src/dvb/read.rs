@@ -3,11 +3,12 @@ use ::std::fs::read_to_string;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
-use ::futures::{FutureExt, stream, StreamExt, TryFutureExt, TryStreamExt};
+use ::futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 use ::lazy_static::lazy_static;
 use ::log::{debug, info, warn};
 use ::regex::Regex;
 
+use crate::dvb::data::parse_tag;
 use crate::Parent;
 
 use super::data::Dockerfile;
@@ -33,22 +34,25 @@ fn read_dockerfile(path: &Path) -> Result<Dockerfile, String> {
     }
 }
 
-pub fn extract_parents(dockerfiles: &[Dockerfile]) -> HashSet<Parent> {
+pub fn extract_parents(dockerfiles: &[Dockerfile]) -> Result<HashSet<Parent>, String> {
     dockerfiles.iter()
         .flat_map(|file| file.content().lines())
         .filter(|line| line.starts_with("FROM "))
-        .flat_map(|line| parse_line_from(line).into_iter())
-        .inspect(|parent| debug!("found parent: {}", &parent))
-        .collect::<HashSet<_>>()
+        .map(|line| parse_line_from(line))
+        .flat_map(|res_opt| res_opt.transpose().into_iter())
+        //.inspect(|parent| debug!("found parent: {}", &parent))
+        .collect()
 }
 
 fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
     match FROM_RE.captures(line) {
         Some(matches) => {
+            let name = matches[1].to_owned();
             let tag_str = &matches[2];
             let tag_pattern = tag_to_re(tag_str)?;
-
-            Ok(Some(Parent::new(&matches[1], tag_pattern, tag, &matches[3])))
+            let tag = parse_tag(&tag_pattern, tag_str)?;
+            let suffix = matches[3].to_owned();
+            Ok(Some(Parent::new(name, tag_pattern, tag, suffix)))
         },
         None => {
             if line.contains(":") {
@@ -64,8 +68,8 @@ fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
 //TODO @mark: test
 fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     let tag_escaped_for_re = &tag_str.replace("-", r"\-");
-    let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)").as_ref();
-    let regex = Regex::new(tag_digits_replaced)
-        .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err));
+    let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
+    let regex = Regex::new(tag_digits_replaced.as_ref())
+        .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err))?;
     Ok(regex)
 }

@@ -73,3 +73,26 @@ fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
         .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err))?;
     Ok(regex)
 }
+
+#[cfg(test)]
+mod tests {
+    use ::regex::Regex;
+
+    use crate::dvb::data::Tag;
+
+    use super::*;
+
+    #[test]
+    fn parse_from_version_date() {
+        let parent = parse_line_from("FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
+        assert_eq!(parent, Parent::new("mverleg/rust_nightly_musl_base".to_owned(),
+            Regex::new("2021-10-17_11").unwrap(), Tag::new((2021, 10, 17, 11)), "".to_owned()));
+    }
+
+    #[test]
+    fn parse_from_version_as() {
+        let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
+        assert_eq!(parent, Parent::new("node".to_owned(),
+            Regex::new("lts-alpine3.14").unwrap(), Tag::new((3, 14, 0, 0)), "AS editor".to_owned()));
+    }
+}

@@ -95,14 +95,3 @@ async fn load_tags(client: &Client, url: String) -> Result<Vec<String>, String> 
 fn choose_tag(parent: &Parent, tags: &str) {
     unimplemented!()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_from_version_as() {
-        let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap();
-        assert_eq!(parent, Parent::from(("node", "lts-alpine3.14", "AS editor")))
-    }
-}

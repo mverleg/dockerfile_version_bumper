@@ -7,6 +7,7 @@ use ::std::path::PathBuf;
 use ::derive_getters::Getters;
 use ::derive_new::new;
 use ::regex::Regex;
+use regex::Match;
 
 #[derive(Debug, Getters, new)]
 pub struct Dockerfile {
@@ -90,9 +91,17 @@ impl hash::Hash for Tag {
 
 //TODO @mark: test
 pub fn parse_tag(tag_pattern: &Regex, tag: &str) -> Result<Tag, String> {
-    let tag = tag_pattern.find(tag)
-        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}", tag, tag_pattern.as_str()))?;
-    tag;
+    let tag = tag_pattern.captures(tag)
+        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, failed to capture", tag, tag_pattern.as_str()))?;
+        //.get(0).ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, no matches", tag, tag_pattern.as_str()))?;
+    Ok(Tag::new((
+        match_to_nr(tag.get(1)),
+        match_to_nr(tag.get(2)),
+        match_to_nr(tag.get(3)),
+        match_to_nr(tag.get(4)),
+    )))
+}
 
-    unimplemented!()
+fn match_to_nr(mtch: Option<Match>) -> u32 {
+    mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap()).unwrap_or_else(|| 0)
 }

@@ -3,9 +3,8 @@ use ::std::fs::read_to_string;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
-use ::futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 use ::lazy_static::lazy_static;
-use ::log::{debug, info, warn};
+use ::log::{info, warn};
 use ::regex::Regex;
 
 use crate::dvb::data::parse_tag;
@@ -65,12 +64,9 @@ fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
     }
 }
 
-//TODO @mark: test
 fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     let tag_escaped_for_re = &tag_str.replace("-", r"\-");
-    dbg!(tag_str);  //TODO @mark: TEMPORARY! REMOVE THIS!
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
-    dbg!(tag_digits_replaced.as_ref());  //TODO @mark: TEMPORARY! REMOVE THIS!
     let regex = Regex::new(tag_digits_replaced.as_ref())
         .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err))?;
     Ok(regex)

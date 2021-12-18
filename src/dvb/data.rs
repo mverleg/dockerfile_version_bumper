@@ -6,11 +6,12 @@ use ::std::path::PathBuf;
 
 use ::derive_getters::Getters;
 use ::derive_new::new;
+use ::regex::Match;
 use ::regex::Regex;
-use regex::Match;
 
 #[derive(Debug, Getters, new)]
 pub struct Dockerfile {
+    #[allow(dead_code)]  //TODO @mark: TEMPORARY! REMOVE THIS!
     path: PathBuf,
     content: String,
 }
@@ -89,13 +90,9 @@ impl hash::Hash for Tag {
     }
 }
 
-//TODO @mark: test
 pub fn parse_tag(tag_pattern: &Regex, tag: &str) -> Result<Tag, String> {
-    dbg!(tag_pattern);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    dbg!(tag);  //TODO @mark: TEMPORARY! REMOVE THIS!
     let tag = tag_pattern.captures(tag)
         .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, failed to capture", tag, tag_pattern.as_str()))?;
-        //.get(0).ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, no matches", tag, tag_pattern.as_str()))?;
     Ok(Tag::new((
         match_to_nr(tag.get(1)),
         match_to_nr(tag.get(2)),
@@ -105,6 +102,5 @@ pub fn parse_tag(tag_pattern: &Regex, tag: &str) -> Result<Tag, String> {
 }
 
 fn match_to_nr(mtch: Option<Match>) -> u32 {
-    dbg!(mtch);  //TODO @mark: TEMPORARY! REMOVE THIS!
     mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap()).unwrap_or_else(|| 0)
 }

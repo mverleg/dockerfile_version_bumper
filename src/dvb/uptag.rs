@@ -38,8 +38,8 @@ async fn load_filter_tags(parent: Parent, client: &Client, url: String, bump_maj
 
 fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, String> {
     let tag = NAME_TAG_RE.captures_iter(&data)
-        .filter(|tag| parent.tag_pattern().is_match(&tag[0]))
-        .map(|tag| parse_tag(parent.tag_pattern(), &tag[0]).unwrap())
+        .filter(|tag| parent.tag_pattern().is_match(&tag[1]))
+        .map(|tag| parse_tag(parent.tag_pattern(), &tag[1]).unwrap())
         .filter(|tag| tag >= parent.tag())
         .filter(|tag| bump_major || tag.major() == parent.tag().major())
         //.inspect(|tag| debug!("tag = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!

@@ -3,6 +3,7 @@ use ::std::fmt;
 use ::std::hash;
 use ::std::hash::Hasher;
 use ::std::path::PathBuf;
+use std::rc::Rc;
 
 use ::derive_getters::Getters;
 use ::derive_new::new;
@@ -18,6 +19,7 @@ pub struct Dockerfile {
 
 #[derive(Debug, Getters, new)]
 pub struct Parent {
+    dockerfile: Rc<Dockerfile>,
     name: String,
     tag_pattern: Regex,
     tag: Tag,
@@ -25,13 +27,14 @@ pub struct Parent {
 }
 
 impl Parent {
-    pub fn into_name_tag(self) -> (String, Tag) {
+    pub fn explode(self) -> (PathBuf, String, Tag) {
         let Parent {
+            dockerfile,
             name,
             tag,
             ..
         } = self;
-        (name, tag)
+        (dockerfile.path().to_owned(), name, tag)
     }
 }
 
@@ -47,7 +50,7 @@ impl fmt::Display for Parent {
 
 impl PartialEq for Parent {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.tag == other.tag
+        self.dockerfile.path() == other.dockerfile.path() && self.name == other.name && self.tag == other.tag
     }
 }
 
@@ -55,6 +58,7 @@ impl Eq for Parent {}
 
 impl hash::Hash for Parent {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.dockerfile.path().hash(state);
         state.write(self.name.as_bytes());
         state.write(self.tag_pattern.as_str().as_bytes());
         self.tag.hash(state);

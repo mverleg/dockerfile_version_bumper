@@ -2,6 +2,7 @@ use ::std::collections::HashSet;
 use ::std::fs::read_to_string;
 use ::std::path::Path;
 use ::std::path::PathBuf;
+use ::std::rc::Rc;
 
 use ::lazy_static::lazy_static;
 use ::log::{info, warn};
@@ -17,10 +18,10 @@ lazy_static! {
     static ref TAG_DIGITS_RE: Regex = Regex::new(r"[0-9]+").unwrap();
 }
 
-pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Dockerfile>, String> {
+pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {
     //TODO @mark: async
     dockerfiles.iter()
-        .map(|path| read_dockerfile(path.as_path()))
+        .map(|path| read_dockerfile(path.as_path()).map(|df| Rc::new(df)))
         .collect::<Result<Vec<_>, _>>()
 }
 
@@ -33,17 +34,17 @@ fn read_dockerfile(path: &Path) -> Result<Dockerfile, String> {
     }
 }
 
-pub fn extract_parents(dockerfiles: &[Dockerfile]) -> Result<HashSet<Parent>, String> {
+pub fn extract_parents(dockerfiles: &[Rc<Dockerfile>]) -> Result<HashSet<Parent>, String> {
     dockerfiles.iter()
-        .flat_map(|file| file.content().lines())
-        .filter(|line| line.starts_with("FROM "))
-        .map(|line| parse_line_from(line))
+        .flat_map(|file| file.content().lines().map(|line| (file.clone(), line)))
+        .filter(|(_, line)| line.starts_with("FROM "))
+        .map(|(file, line)| parse_line_from(file, line))
         .flat_map(|res_opt| res_opt.transpose().into_iter())
         //.inspect(|parent| debug!("found parent: {}", &parent))
         .collect()
 }
 
-fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
+fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Parent>, String> {
     match FROM_RE.captures(line) {
         Some(matches) => {
             let name = matches[1].to_owned();
@@ -51,7 +52,7 @@ fn parse_line_from(line: &str) -> Result<Option<Parent>, String> {
             let tag_pattern = tag_to_re(tag_str)?;
             let tag = parse_tag(&tag_pattern, tag_str)?;
             let suffix = matches[3].to_owned();
-            Ok(Some(Parent::new(name, tag_pattern, tag, suffix)))
+            Ok(Some(Parent::new(dockerfile, name, tag_pattern, tag, suffix)))
         },
         None => {
             if line.contains(":") {

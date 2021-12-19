@@ -11,13 +11,13 @@ use crate::dvb::uptag::find_latest_tag;
 mod dvb;
 
 /// Unless dry-run, bump all the Dockerfiles for which there is a new matching version.
-/// returns: (from-image name, old tag, new tag) if successful, error message otherwise
+/// returns: (dockerfile path, from-image name, old tag, new tag) if successful, error message otherwise
 pub async fn bump_dockerfiles(
     dockerfiles: &[PathBuf],
     allow_parents: &[String],
     bump_major: bool,
     dry_run: bool,
-) -> Result<Vec<(String, Tag, Tag)>, String> {
+) -> Result<Vec<(PathBuf, String, Tag, Tag)>, String> {
     assert!(bump_major, "bumping only minor versions not implemented, use --major");
     assert!(dry_run, "in-place update not implemented, use --dry-run");
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
@@ -25,8 +25,8 @@ pub async fn bump_dockerfiles(
     let parents = filter_parents(all_parents, allow_parents)?;
     let latest_tags = find_latest_tag(parents, bump_major).await?;
     Ok(latest_tags.into_iter()
-        .map(|(parent, new_tag)| (parent.into_name_tag(), new_tag))
-        .map(|((name, old_tag), new_tag)| (name, old_tag, new_tag))
+        .map(|(parent, new_tag)| (parent.explode(), new_tag))
+        .map(|((dockerfile, name, old_tag), new_tag)| (dockerfile, name, old_tag, new_tag))
         .collect())
 }
 

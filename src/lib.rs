@@ -1,39 +1,33 @@
 use ::std::collections::HashSet;
 use ::std::path::PathBuf;
 
-use ::indexmap::IndexMap;
 use ::log::debug;
 
-use crate::dvb::data::{Parent, Tag};
+use crate::dvb::data::Parent;
+pub use crate::dvb::data::Tag;
 use crate::dvb::read::{extract_parents, read_all_dockerfiles};
 use crate::dvb::uptag::find_latest_tag;
 
 mod dvb;
 
+/// Unless dry-run, bump all the Dockerfiles for which there is a new matching version.
+/// returns: (from-image name, old tag, new tag) if successful, error message otherwise
 pub async fn bump_dockerfiles(
     dockerfiles: &[PathBuf],
     allow_parents: &[String],
     bump_major: bool,
     dry_run: bool,
-) -> Result<(), String> {
+) -> Result<Vec<(String, Tag, Tag)>, String> {
     assert!(bump_major, "bumping only minor versions not implemented, use --major");
     assert!(dry_run, "in-place update not implemented, use --dry-run");
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
     let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;
-    let latest_tag = find_latest_tag(parents, bump_major).await?;
-    print_tags(&latest_tag);
-    unimplemented!()
-}
-
-fn print_tags(parent_latest_tags: &IndexMap<Parent, Tag>) {
-    for (parent, latest_tag) in parent_latest_tags {
-        if parent.tag() == latest_tag {
-            println!("{}\t{} (up-to-date)", parent.name(), parent.tag())
-        } else {
-            println!("{}\t{} -> {}", parent.name(), parent.tag(), latest_tag)
-        }
-    }
+    let latest_tags = find_latest_tag(parents, bump_major).await?;
+    Ok(latest_tags.into_iter()
+        .map(|(parent, new_tag)| (parent.into_name_tag(), new_tag))
+        .map(|((name, old_tag), new_tag)| (name, old_tag, new_tag))
+        .collect())
 }
 
 fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -> Result<HashSet<Parent>, String> {

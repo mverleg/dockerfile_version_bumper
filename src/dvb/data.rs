@@ -24,6 +24,17 @@ pub struct Parent {
     suffix: String,
 }
 
+impl Parent {
+    pub fn into_name_tag(self) -> (String, Tag) {
+        let Parent {
+            name,
+            tag,
+            ..
+        } = self;
+        (name, tag)
+    }
+}
+
 impl fmt::Display for Parent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.suffix.is_empty() {

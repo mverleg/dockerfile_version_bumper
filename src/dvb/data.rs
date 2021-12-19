@@ -64,7 +64,7 @@ impl Tag {
 
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}.{}.{}.{}", self.nrs.0, self.nrs.1, self.nrs.2, self.nrs.3)
+        write!(f, "{}", self.name)
     }
 }
 

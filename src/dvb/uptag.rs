@@ -1,7 +1,7 @@
-use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 
 use ::futures::{stream, StreamExt, TryStreamExt};
+use ::indexmap::IndexMap;
 use ::itertools::Itertools;
 use ::lazy_static::lazy_static;
 use ::log::debug;
@@ -15,7 +15,7 @@ lazy_static! {
     static ref NAME_TAG_RE: Regex = Regex::new("\"name\":\\s*\"([^\"]*)\"").unwrap();
 }
 
-pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Result<Vec<(Parent, Tag)>, String> {
+pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Result<IndexMap<Parent, Tag>, String> {
     let client = Client::new();
 
     let latest_tags = stream::iter(parents.into_iter()
@@ -25,7 +25,9 @@ pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Resu
         .try_collect::<Vec<_>>()
         .await?;
 
-    Ok(latest_tags)
+    Ok(latest_tags.into_iter()
+        .sorted_by(|(parent1, _), (parent2, _)| parent1.name().cmp(parent2.name()))
+        .collect::<IndexMap<Parent, Tag>>())
 }
 
 async fn load_filter_tags(parent: Parent, client: &Client, url: String, bump_major: bool) -> Result<(Parent, Tag), String> {
@@ -40,9 +42,9 @@ fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, St
         .map(|tag| parse_tag(parent.tag_pattern(), &tag[0]).unwrap())
         .filter(|tag| tag >= parent.tag())
         .filter(|tag| bump_major || tag.major() == parent.tag().major())
-        .inspect(|tag| debug!("tag = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
+        //.inspect(|tag| debug!("tag = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
         .sorted()
-        .inspect(|tag| debug!("CHOSEN = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
+        //.inspect(|tag| debug!("CHOSEN = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
         .rev()
         .next()
         .ok_or_else(|| format!("could not find the version {} nor any higher ones", parent.tag()))?;

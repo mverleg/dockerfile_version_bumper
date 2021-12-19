@@ -134,6 +134,7 @@ dependencies = [
  "derive-new",
  "env_logger",
  "futures",
+ "indexmap",
  "itertools",
  "jemallocator",
  "lazy_static",

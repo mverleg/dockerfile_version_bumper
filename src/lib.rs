@@ -1,9 +1,10 @@
 use ::std::collections::HashSet;
 use ::std::path::PathBuf;
 
+use ::indexmap::IndexMap;
 use ::log::debug;
 
-use crate::dvb::data::Parent;
+use crate::dvb::data::{Parent, Tag};
 use crate::dvb::read::{extract_parents, read_all_dockerfiles};
 use crate::dvb::uptag::find_latest_tag;
 
@@ -21,7 +22,18 @@ pub async fn bump_dockerfiles(
     let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;
     let latest_tag = find_latest_tag(parents, bump_major).await?;
+    print_tags(&latest_tag);
     unimplemented!()
+}
+
+fn print_tags(parent_latest_tags: &IndexMap<Parent, Tag>) {
+    for (parent, latest_tag) in parent_latest_tags {
+        if parent.tag() == latest_tag {
+            println!("{}\t{} (up-to-date)", parent.name(), parent.tag())
+        } else {
+            println!("{}\t{} -> {}", parent.name(), parent.tag(), latest_tag)
+        }
+    }
 }
 
 fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -> Result<HashSet<Parent>, String> {

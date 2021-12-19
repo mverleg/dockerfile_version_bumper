@@ -39,7 +39,11 @@ async fn main() {
     let args = Args::from_args();
     match bump_dockerfiles(args.dockerfiles(), args.parents(), *args.bump_major(), *args.dry_run()).await {
         Ok(latest_tags) => {
-            print_tags(&latest_tags);
+            if *args.json() {
+                print_tags_json(&latest_tags);
+            } else {
+                print_tags_text(&latest_tags);
+            }
             eprintln!("finished in {} ms", SystemTime::now().duration_since(start).unwrap().as_millis())
         }
         Err(err) => {
@@ -49,7 +53,24 @@ async fn main() {
     }
 }
 
-fn print_tags(parent_latest_tags: &[(String, Tag, Tag)]) {
+fn print_tags_json(parent_latest_tags: &[(String, Tag, Tag)]) {
+    let mut is_first = true;
+    println!("[");
+    for (name, old_tag, new_tag) in parent_latest_tags {
+        if is_first {
+            is_first = false
+        } else {
+            println!(",");
+        }
+        print!("  {{\"image\": \"{}\", ", name);
+        print!("\"current_tag\": \"{}\", ", old_tag);
+        print!("\"updated_tag\": \"{}\", ", new_tag);
+        println!("\"is_update\": {}}}", old_tag != new_tag);
+    }
+    println!("\n]");
+}
+
+fn print_tags_text(parent_latest_tags: &[(String, Tag, Tag)]) {
     for (name, old_tag, new_tag) in parent_latest_tags {
         if old_tag == new_tag {
             println!("{}\t{} (up-to-date)", name, old_tag)

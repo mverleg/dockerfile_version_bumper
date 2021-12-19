@@ -83,16 +83,18 @@ mod tests {
 
     #[test]
     fn parse_from_version_date() {
-        let parent = parse_line_from("FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
-        assert_eq!(parent, Parent::new("mverleg/rust_nightly_musl_base".to_owned(),
+        let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
+        let parent = parse_line_from(dockerfile.clone(), "FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
+        assert_eq!(parent, Parent::new(dockerfile, "mverleg/rust_nightly_musl_base".to_owned(),
             Regex::new("").unwrap(), Tag::new("2021-10-17_11".to_owned(), (2021, 10, 17, 11)), "".to_owned()));
         assert_eq!(parent.tag_pattern().as_str(), r"([0-9]+)\-([0-9]+)\-([0-9]+)_([0-9]+)");
     }
 
     #[test]
     fn parse_from_version_as() {
-        let parent = parse_line_from("FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
-        assert_eq!(parent, Parent::new("node".to_owned(),
+        let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
+        let parent = parse_line_from(dockerfile.clone(), "FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
+        assert_eq!(parent, Parent::new(dockerfile, "node".to_owned(),
             Regex::new("").unwrap(), Tag::new("lts-alpine3.14".to_owned(), (3, 14, 0, 0)), "AS editor".to_owned()));
         assert_eq!(parent.tag_pattern().as_str(), r"lts\-alpine([0-9]+)\.([0-9]+)");
     }

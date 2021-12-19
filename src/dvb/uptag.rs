@@ -62,6 +62,11 @@ async fn request_tag_json(client: &Client, url: &String) -> Result<String, Strin
 
 #[cfg(test)]
 mod tests {
+    use ::std::path::PathBuf;
+    use ::std::rc::Rc;
+
+    use crate::dvb::data::Dockerfile;
+
     use super::*;
 
     static TAGS_JSON: &'static str = "[\
@@ -73,7 +78,8 @@ mod tests {
 
     #[test]
     fn bump_minor() {
-        let parent = Parent::new("".to_owned(),
+        let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
+        let parent = Parent::new(dockerfile, "".to_owned(),
                 Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
                 Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
                 "AS build".to_owned());
@@ -83,7 +89,8 @@ mod tests {
 
     #[test]
     fn bump_major() {
-        let parent = Parent::new("".to_owned(),
+        let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
+        let parent = Parent::new(dockerfile, "".to_owned(),
                 Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
                 Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
                 "AS build".to_owned());

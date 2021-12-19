@@ -3,7 +3,7 @@ use ::std::fmt;
 use ::std::hash;
 use ::std::hash::Hasher;
 use ::std::path::PathBuf;
-use std::rc::Rc;
+use ::std::rc::Rc;
 
 use ::derive_getters::Getters;
 use ::derive_new::new;

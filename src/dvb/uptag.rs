@@ -26,7 +26,7 @@ pub async fn find_latest_tag(parents: HashSet<Parent>, bump_major: bool) -> Resu
         .await?;
 
     Ok(latest_tags.into_iter()
-        .sorted_by(|(parent1, _), (parent2, _)| parent1.name().cmp(parent2.name()))
+        .sorted_by(|(parent1, _), (parent2, _)| parent1.dockerfile().cmp(parent2.dockerfile()).then(parent1.name().cmp(parent2.name())))
         .collect::<IndexMap<Parent, Tag>>())
 }
 

@@ -8,7 +8,7 @@ use ::structopt::StructOpt;
 use ::tokio;
 
 use ::dockerfile_version_bumper::bump_dockerfiles;
-use ::dockerfile_version_bumper::Tag;
+use dockerfile_version_bumper::TagUp;
 
 #[cfg(feature = "jemalloc")]
 #[global_allocator]
@@ -53,30 +53,30 @@ async fn main() {
     }
 }
 
-fn print_tags_json(parent_latest_tags: &[(PathBuf, String, Tag, Tag)]) {
+fn print_tags_json(parent_latest_tags: &[TagUp]) {
     let mut is_first = true;
     println!("[");
-    for (dockerfile, name, old_tag, new_tag) in parent_latest_tags {
+    for up in parent_latest_tags {
         if is_first {
             is_first = false
         } else {
             println!(",");
         }
-        print!("  {{\"image\": \"{}\", ", name);
-        print!("\"dockerfile\": \"{}\", ", dockerfile.to_string_lossy());
-        print!("\"current_tag\": \"{}\", ", old_tag);
-        print!("\"updated_tag\": \"{}\", ", new_tag);
-        print!("\"is_update\": {}}}", old_tag != new_tag);
+        print!("  {{\"image\": \"{}\", ", &up.image);
+        print!("\"dockerfile\": \"{}\", ", up.dockerfile.to_string_lossy());
+        print!("\"current_tag\": \"{}\", ", up.old_tag);
+        print!("\"updated_tag\": \"{}\", ", up.new_tag);
+        print!("\"is_update\": {}}}", up.old_tag != up.new_tag);
     }
     println!("\n]");
 }
 
-fn print_tags_text(parent_latest_tags: &[(PathBuf, String, Tag, Tag)]) {
-    for (_, name, old_tag, new_tag) in parent_latest_tags {
-        if old_tag == new_tag {
-            println!("{}\t{} (up-to-date)", name, old_tag)
+fn print_tags_text(parent_latest_tags: &[TagUp]) {
+    for up in parent_latest_tags {
+        if up.old_tag == up.new_tag {
+            println!("{}\t{} (up-to-date)", up.image, up.old_tag)
         } else {
-            println!("{}\t{} -> {}", name, old_tag, new_tag)
+            println!("{}\t{} -> {}", up.image, up.old_tag, up.new_tag)
         }
     }
 }

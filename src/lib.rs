@@ -1,10 +1,10 @@
 use ::std::collections::HashSet;
 use ::std::path::PathBuf;
 
+use ::derive_new::new;
 use ::log::debug;
 
 use crate::dvb::data::Parent;
-pub use crate::dvb::data::Tag;
 use crate::dvb::read::{extract_parents, read_all_dockerfiles};
 use crate::dvb::uptag::find_latest_tag;
 
@@ -17,7 +17,7 @@ pub async fn bump_dockerfiles(
     allow_parents: &[String],
     bump_major: bool,
     dry_run: bool,
-) -> Result<Vec<(PathBuf, String, Tag, Tag)>, String> {
+) -> Result<Vec<TagUp>, String> {
     assert!(bump_major, "bumping only minor versions not implemented, use --major");
     assert!(dry_run, "in-place update not implemented, use --dry-run");
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
@@ -26,8 +26,17 @@ pub async fn bump_dockerfiles(
     let latest_tags = find_latest_tag(parents, bump_major).await?;
     Ok(latest_tags.into_iter()
         .map(|(parent, new_tag)| (parent.explode(), new_tag))
-        .map(|((dockerfile, name, old_tag), new_tag)| (dockerfile, name, old_tag, new_tag))
+        .map(|((dockerfile, name, old_tag), new_tag)| TagUp::new(
+            dockerfile, name, old_tag.name().to_owned(), new_tag.name().to_owned()))
         .collect())
+}
+
+#[derive(Debug, Clone, new)]
+pub struct TagUp {
+    pub dockerfile: PathBuf,
+    pub image: String,
+    pub old_tag: String,
+    pub new_tag: String,
 }
 
 fn filter_parents(all_parents: HashSet<Parent>, allow_parent_names: &[String]) -> Result<HashSet<Parent>, String> {

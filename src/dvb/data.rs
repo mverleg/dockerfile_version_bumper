@@ -17,6 +17,26 @@ pub struct Dockerfile {
     content: String,
 }
 
+impl PartialEq for Dockerfile {
+    fn eq(&self, other: &Self) -> bool {
+        self.path() == other.path()
+    }
+}
+
+impl Eq for Dockerfile {}
+
+impl PartialOrd for Dockerfile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.path.partial_cmp(&other.path)
+    }
+}
+
+impl Ord for Dockerfile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.path.cmp(&other.path)
+    }
+}
+
 #[derive(Debug, Getters, new)]
 pub struct Parent {
     dockerfile: Rc<Dockerfile>,
@@ -65,7 +85,7 @@ impl hash::Hash for Parent {
     }
 }
 
-#[derive(Debug, Getters, new)]
+#[derive(Debug, Clone, Getters, new)]
 pub struct Tag {
     name: String,
     nrs: (u32, u32, u32, u32,),

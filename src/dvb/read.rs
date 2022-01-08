@@ -68,7 +68,8 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
 fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     let tag_escaped_for_re = &tag_str.replace("-", r"\-").replace(".", r"\.");
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
-    let regex = Regex::new(tag_digits_replaced.as_ref())
+    let tag_full_match_re = format!("^{}$", tag_digits_replaced);
+    let regex = Regex::new(tag_full_match_re.as_ref())
         .map_err(|err| format!("tag could not be turned into regex pattern; tag: {}, err: {}", tag_str, err))?;
     Ok(regex)
 }
@@ -87,7 +88,7 @@ mod tests {
         let parent = parse_line_from(dockerfile.clone(), "FROM mverleg/rust_nightly_musl_base:2021-10-17_11").unwrap().unwrap();
         assert_eq!(parent, Parent::new(dockerfile, "mverleg/rust_nightly_musl_base".to_owned(),
             Regex::new("").unwrap(), Tag::new("2021-10-17_11".to_owned(), (2021, 10, 17, 11)), "".to_owned()));
-        assert_eq!(parent.tag_pattern().as_str(), r"([0-9]+)\-([0-9]+)\-([0-9]+)_([0-9]+)");
+        assert_eq!(parent.tag_pattern().as_str(), r"^([0-9]+)\-([0-9]+)\-([0-9]+)_([0-9]+)$");
     }
 
     #[test]
@@ -96,6 +97,6 @@ mod tests {
         let parent = parse_line_from(dockerfile.clone(), "FROM node:lts-alpine3.14 AS editor").unwrap().unwrap();
         assert_eq!(parent, Parent::new(dockerfile, "node".to_owned(),
             Regex::new("").unwrap(), Tag::new("lts-alpine3.14".to_owned(), (3, 14, 0, 0)), "AS editor".to_owned()));
-        assert_eq!(parent.tag_pattern().as_str(), r"lts\-alpine([0-9]+)\.([0-9]+)");
+        assert_eq!(parent.tag_pattern().as_str(), r"^lts\-alpine([0-9]+)\.([0-9]+)$");
     }
 }

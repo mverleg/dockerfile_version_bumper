@@ -72,6 +72,7 @@ mod tests {
     static TAGS_JSON: &'static str = "[\
             {\"layer\": \"\", \"name\": \"2.5.1-full\"}, \
             {\"layer\": \"\", \"name\": \"3.6.6-full\"}, \
+            {\"layer\": \"\", \"name\": \"3.6.6-alpine-perl\"}, \
             {\"layer\": \"\", \"name\": \"2.4.1-alpine\"}, \
             {\"layer\": \"\", \"name\": \"3.5.2-alpine\"}, \
             {\"layer\": \"\", \"name\": \"1.9.9-alpine\"}]";
@@ -80,7 +81,7 @@ mod tests {
     fn bump_minor() {
         let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
         let parent = Parent::new(dockerfile, "".to_owned(),
-                Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
+                Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
                 Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
                 "AS build".to_owned());
         let highest = find_highest(&parent, TAGS_JSON, false);
@@ -91,7 +92,7 @@ mod tests {
     fn bump_major() {
         let dockerfile = Rc::new(Dockerfile::new(PathBuf::from("file.ext"), "".to_owned()));
         let parent = Parent::new(dockerfile, "".to_owned(),
-                Regex::new(r"([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine").unwrap(),
+                Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
                 Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
                 "AS build".to_owned());
         let highest = find_highest(&parent, TAGS_JSON, true);

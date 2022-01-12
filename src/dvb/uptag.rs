@@ -37,7 +37,7 @@ async fn load_filter_tags(parent: Parent, client: &Client, url: String, bump_maj
 }
 
 fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, String> {
-    let tag = NAME_TAG_RE.captures_iter(&data)
+    let tag = NAME_TAG_RE.captures_iter(data)
         .filter(|tag| parent.tag_pattern().is_match(&tag[1]))
         .map(|tag| parse_tag(parent.tag_pattern(), &tag[1]).unwrap())
         .filter(|tag| tag >= parent.tag())
@@ -51,7 +51,7 @@ fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, St
     Ok(tag)
 }
 
-async fn request_tag_json(client: &Client, url: &String) -> Result<String, String> {
+async fn request_tag_json(client: &Client, url: &str) -> Result<String, String> {
     debug!("request to: {}", &url);
     let resp = client.get(url).send().await.map_err(|err|
         format!("Failed to request available Docker image tags: err {} for {}", err, &url))?;
@@ -69,7 +69,7 @@ mod tests {
 
     use super::*;
 
-    static TAGS_JSON: &'static str = "[\
+    static TAGS_JSON: &str = "[\
             {\"layer\": \"\", \"name\": \"2.5.1-full\"}, \
             {\"layer\": \"\", \"name\": \"3.6.6-full\"}, \
             {\"layer\": \"\", \"name\": \"3.6.6-alpine-perl\"}, \

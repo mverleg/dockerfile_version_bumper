@@ -21,7 +21,7 @@ lazy_static! {
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {
     //TODO @mark: async
     dockerfiles.iter()
-        .map(|path| read_dockerfile(path.as_path()).map(|df| Rc::new(df)))
+        .map(|path| read_dockerfile(path.as_path()).map(Rc::new))
         .collect::<Result<Vec<_>, _>>()
 }
 
@@ -55,7 +55,7 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
             Ok(Some(Parent::new(dockerfile, name, tag_pattern, tag, suffix)))
         },
         None => {
-            if line.contains(":") {
+            if line.contains(':') {
                 warn!("warning: FROM line, but could not recognize version:\n  {}", line);
             } else {
                 info!("skipping line because there is no version: {}", line);
@@ -66,7 +66,7 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
 }
 
 fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
-    let tag_escaped_for_re = &tag_str.replace("-", r"\-").replace(".", r"\.");
+    let tag_escaped_for_re = &tag_str.replace('-', r"\-").replace('.', r"\.");
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
     let tag_full_match_re = format!("^{}$", tag_digits_replaced);
     let regex = Regex::new(tag_full_match_re.as_ref())

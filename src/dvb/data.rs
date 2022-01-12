@@ -12,7 +12,7 @@ use ::regex::Regex;
 
 #[derive(Debug, Getters, new)]
 pub struct Dockerfile {
-    #[allow(dead_code)]  //TODO @mark: TEMPORARY! REMOVE THIS!
+    #[allow(dead_code)] //TODO @mark: TEMPORARY! REMOVE THIS!
     path: PathBuf,
     content: String,
 }
@@ -61,16 +61,31 @@ impl Parent {
 impl fmt::Display for Parent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.suffix.is_empty() {
-            write!(f, "{}:{}@{}", &self.name, &self.tag, self.tag_pattern.as_str())
+            write!(
+                f,
+                "{}:{}@{}",
+                &self.name,
+                &self.tag,
+                self.tag_pattern.as_str()
+            )
         } else {
-            write!(f, "{}:{}@{} {}", &self.name, &self.tag, self.tag_pattern.as_str(), &self.suffix)
+            write!(
+                f,
+                "{}:{}@{} {}",
+                &self.name,
+                &self.tag,
+                self.tag_pattern.as_str(),
+                &self.suffix
+            )
         }
     }
 }
 
 impl PartialEq for Parent {
     fn eq(&self, other: &Self) -> bool {
-        self.dockerfile.path() == other.dockerfile.path() && self.name == other.name && self.tag == other.tag
+        self.dockerfile.path() == other.dockerfile.path()
+            && self.name == other.name
+            && self.tag == other.tag
     }
 }
 
@@ -88,7 +103,7 @@ impl hash::Hash for Parent {
 #[derive(Debug, Clone, Getters, new)]
 pub struct Tag {
     name: String,
-    nrs: (u32, u32, u32, u32,),
+    nrs: (u32, u32, u32, u32),
 }
 
 impl Tag {
@@ -134,8 +149,13 @@ impl hash::Hash for Tag {
 
 pub fn parse_tag(tag_pattern: &Regex, tag: impl Into<String>) -> Result<Tag, String> {
     let tag = tag.into();
-    let parts = tag_pattern.captures(&tag)
-        .ok_or_else(|| format!("could not extract digits from tag; tag: {}, pattern: {}, failed to capture", &tag, tag_pattern.as_str()))?;
+    let parts = tag_pattern.captures(&tag).ok_or_else(|| {
+        format!(
+            "could not extract digits from tag; tag: {}, pattern: {}, failed to capture",
+            &tag,
+            tag_pattern.as_str()
+        )
+    })?;
     let nrs = (
         match_to_nr(parts.get(1)),
         match_to_nr(parts.get(2)),
@@ -146,5 +166,6 @@ pub fn parse_tag(tag_pattern: &Regex, tag: impl Into<String>) -> Result<Tag, Str
 }
 
 fn match_to_nr(mtch: Option<Match>) -> u32 {
-    mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap()).unwrap_or_else(|| 0)
+    mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap())
+        .unwrap_or_else(|| 0)
 }

@@ -1,14 +1,17 @@
 
+# GENERATED: This file is automatically updated by 'Bump dependencies', local changes will be overwritten!
+
 name: 'Check dependencies'
 
 on:
   push:
     branches:
       - 'main'
+      - 'master'
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '0 8 * * 0'
+    - cron: '0 8 */2 * *'
 
 jobs:
   checks:

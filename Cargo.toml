@@ -24,12 +24,12 @@ structopt = "0.3.25"
 regex = "1.5.4"
 lazy_static = "1.4.0"
 tokio = { version = "1.15.0", features = ["full"] }
-reqwest = "0.11.8"
+reqwest = "0.11.9"
 futures = "0.3.19"
 derive-getters = "0.2.0"
 derive-new = "0.5.9"
 itertools = "0.10.3"
-indexmap = "1.7.0"
+indexmap = "1.8.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = { version = "0.3.2", optional = true }

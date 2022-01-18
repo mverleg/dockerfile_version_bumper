@@ -38,11 +38,7 @@ jobs:
           echo "::set-output name=DATE_NAME::$(date +'%Oe %B %Y')"
       - name: Ensure config file exists
         run: |
-          if [ ! -e ci-conf.json ]
-          then 
-              curl --silent 'https://raw.githubusercontent.com/mverleg/ci_util/main/github_action/ci-conf-example.json' \
-                  --output './ci-conf.json'
-          fi
+          if [ ! -e ci-conf.json ]; then  curl --silent 'https://raw.githubusercontent.com/mverleg/ci_util/main/github_action/ci-conf-example.json' --output './ci-conf.json'; fi
       - name: Self-update bumper action
         if: "$(jq  .bump_dependencies.ci -r ci-conf.json)" != false
         run: |

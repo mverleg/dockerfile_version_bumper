@@ -1,0 +1,12 @@
+{
+  "bump_dependencies": {
+    "ci": {},
+    "cargo": {},
+    "dockerfile": {}
+  },
+  "check_dependencies": {},
+  "test_lint": {},
+  "release": {
+    "artifact": {}
+  }
+}

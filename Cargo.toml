@@ -20,7 +20,7 @@ jemalloc = ["jemallocator"]
 [dependencies]
 log = "0.4.14"
 env_logger = "0.9.0"
-structopt = "0.3.25"
+structopt = "0.3.26"
 regex = "1.5.4"
 lazy_static = "1.4.0"
 tokio = { version = "1.15.0", features = ["full"] }

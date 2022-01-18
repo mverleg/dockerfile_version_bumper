@@ -2,7 +2,7 @@
   "bump_dependencies": {
     "ci": {},
     "cargo": {},
-    "dockerfile": {}
+    "dockerfile": false
   },
   "check_dependencies": {},
   "test_lint": {},

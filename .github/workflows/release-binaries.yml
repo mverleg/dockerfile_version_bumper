@@ -2,10 +2,10 @@
 name: 'Release'
 
 on:
-  push:
-    branches:
-      - 'main'
-      - 'master'
+  #push:
+  #  branches:
+  #    - 'main'
+  #    - 'master'
   workflow_dispatch:
 
 jobs:
@@ -37,9 +37,9 @@ jobs:
     name: Release binaries
     needs: make_matrix
     runs-on: ${{ matrix.os }}
-    if: needs.make_matrix.conf.outputs.do_artifact == 1
+    if: needs.make_matrix.outputs.do_artifact == 1
     strategy:
-      matrix: ${{ fromJson(needs.make_matrix.generate_matrix.outputs.bin_targets) }}
+      matrix: ${{ fromJson(needs.make_matrix.outputs.bin_targets) }}
     steps:
       - name: Log matrix
         run: |

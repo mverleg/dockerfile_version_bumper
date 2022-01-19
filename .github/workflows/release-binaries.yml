@@ -29,9 +29,9 @@ jobs:
         id: generate_matrix
         if: steps.conf.outputs.do_artifact == 1
         run: |
-          mat="$(jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})' | jq -sc)"
+          mat="$(jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})' | jq -sc '{"include":.})"
           echo $mat
-          echo ::set-output name=bin_targets::'{"include":"$mat"}'
+          echo ::set-output name=bin_targets::"$mat"
 
   binary:
     name: Release binaries

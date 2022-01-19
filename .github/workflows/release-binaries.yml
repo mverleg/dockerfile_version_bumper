@@ -31,7 +31,7 @@ jobs:
         run: |
           mat="$(jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})' | jq -sc)"
           echo $mat
-          ::set-output name=bin_targets::'{"include":"$mat"}'
+          echo ::set-output name=bin_targets::'{"include":"$mat"}'
 
   binary:
     name: Release binaries

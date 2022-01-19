@@ -12,18 +12,37 @@ jobs:
   make_matrix:
     name: Make matrix
     runs-on: ubuntu-latest
+    outputs:
+      bin_targets: ${{ steps.generate_matrix.outputs.bin_targets }}
+      do_artifact: ${{ steps.conf.outputs.do_artifact }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Check conditions
         id: conf
         run: |
-          echo ::set-output name=artifact::1;
+          echo ::set-output name=do_artifact::1;
           if [ "$(jq .release.artifact -r ci-conf.json)" = false ] || [ "$(jq .release.artifact -r ci-conf.json)" = null ]; then echo 'skipping because no release artifact config'; echo ::set-output name=artifact::0; fi
           if [ "$(jq .release.artifact.targets -r ci-conf.json)" = false ]; then echo 'skipping because no targets'; echo ::set-output name=artifact::0; fi
           if [ "$(jq .release.artifact.bins -r ci-conf.json)" = false ]; then echo 'skipping because no binaries'; echo ::set-output name=artifact::0; fi
-      - name: Export matrix
+      - name: Generate matrix
+        id: generate_matrix
+        if: steps.conf.outputs.do_artifact == 1
         run: |
+          mat="$(jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})' | jq -sc)"
+          echo $mat
+          ::set-output name=bin_targets::'{"include":"$mat"}'
 
-    # jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})'
-
+  binary:
+    name: Release binaries
+    needs: make_matrix
+    runs-on: ${{ matrix.os }}
+    if: needs.make_matrix.conf.outputs.do_artifact == 1
+    strategy:
+      matrix: ${{ fromJson(needs.make_matrix.generate_matrix.outputs.bin_targets) }}
+    steps:
+      - run: |
+          echo bin=${{ matrix.bin }}
+          echo os=${{ matrix.os }}
+          echo target=${{ matrix.target }}
+          echo asset_postfix=${{ matrix.asset_postfix }}

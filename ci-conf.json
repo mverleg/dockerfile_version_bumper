@@ -7,6 +7,17 @@
   "check_dependencies": {},
   "test_lint": {},
   "release": {
-    "artifact": {}
+    "artifact": {
+      "targets": [
+          { "os": "ubuntu-latest", "target": "aarch64-unknown-linux-gnu", "asset_postfix": "linux-arm64" },
+          { "os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu", "asset_postfix": "linux-x86-64" },
+          { "os": "windows-latest", "target": "x86_64-pc-windows-msvc", "asset_postfix": "win-x86-64" },
+          { "os": "macos-latest", "target": "x86_64-apple-darwin", "asset_postfix": "macos-x86-64" },
+          { "os": "ubuntu-latest", "target": "wasm32-unknown-unknown", "asset_postfix": "wasm32-pure" }
+      ],
+      "bins": [
+        "dockerfile_version_bumper"
+      ]
+    }
   }
 }

@@ -50,7 +50,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build project
-        run: cargo build --bin ${{ matrix.bin }}--target ${{ matrix.target }} --release --locked
+        run: cargo build --bin ${{ matrix.bin }} --target ${{ matrix.target }} --release --locked
       - name: Upload binary to release
         uses: svenstaro/upload-release-action@v1-release
         with:

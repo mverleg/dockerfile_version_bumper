@@ -1,0 +1,29 @@
+
+name: 'Release'
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'master'
+  workflow_dispatch:
+
+jobs:
+  make_matrix:
+    name: Make matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check conditions
+        id: conf
+        run: |
+          echo ::set-output name=artifact::1;
+          if [ "$(jq .release.artifact -r ci-conf.json)" = false ] || [ "$(jq .release.artifact -r ci-conf.json)" = null ]; then echo 'skipping because no release artifact config'; echo ::set-output name=artifact::0; fi
+          if [ "$(jq .release.artifact.targets -r ci-conf.json)" = false ]; then echo 'skipping because no targets'; echo ::set-output name=artifact::0; fi
+          if [ "$(jq .release.artifact.bins -r ci-conf.json)" = false ]; then echo 'skipping because no binaries'; echo ::set-output name=artifact::0; fi
+      - name: Export matrix
+        run: |
+
+    # jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})'
+

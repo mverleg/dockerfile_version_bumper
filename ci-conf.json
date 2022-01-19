@@ -16,7 +16,8 @@
           { "os": "ubuntu-latest", "target": "wasm32-unknown-unknown", "asset_postfix": "wasm32-pure" }
       ],
       "bins": [
-        "dockerfile_version_bumper"
+        "dockerfile_version_bumper",
+        "example_bin"
       ]
     }
   }

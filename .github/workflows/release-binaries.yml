@@ -41,8 +41,19 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.make_matrix.generate_matrix.outputs.bin_targets) }}
     steps:
-      - run: |
+      - name: Log matrix
+        run: |
           echo bin=${{ matrix.bin }}
           echo os=${{ matrix.os }}
           echo target=${{ matrix.target }}
           echo asset_postfix=${{ matrix.asset_postfix }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build project
+        run: cargo build --bin ${{ matrix.bin }}--target ${{ matrix.target }} --release --locked
+      - name: Upload binary to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.bin }}
+          asset_name: ${{ matrix.bin }}-${{ matrix.asset_postfix }}

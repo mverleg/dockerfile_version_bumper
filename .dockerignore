@@ -1,3 +1,5 @@
 .idea/
 .git/
 target/
+ci/
+.github/

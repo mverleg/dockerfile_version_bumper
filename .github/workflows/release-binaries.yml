@@ -48,8 +48,6 @@ jobs:
           echo asset_postfix=${{ matrix.asset_postfix }}
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Add target
-        run: rustup target add ${{ matrix.target }}
       - name: Build project
         run: |
           cat ./ci/release.Dockerfile

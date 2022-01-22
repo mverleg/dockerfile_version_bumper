@@ -7,13 +7,16 @@ ARG TARGET=x86_64-unknown-linux-musl
 RUN test -n "$BIN" || { echo "build arg BIN is required: cargo binary" 1>&2 && exit 1; } &&\
     test -n "$TARGET" || { echo "build arg TARGET is required: build target" 1>&2 && exit 2; }
 
+# Add target
+RUN rustup target add "$TARGET"
+
 # Copy the code (all except .dockerignore).
 COPY ./ ./
 
 # Build (for release)
 RUN find . -name target -prune -o -type f &&\
     touch -c build.rs src/main.rs src/lib.rs &&\
-    cargo build --bin $BIN --target $TARGET --release --locked
+    cargo build --bin "$BIN" --target "$TARGET" --release --locked
 
 # Copy executable
 RUN find . -wholename "*/target/*" -name "$BIN" -type f -executable -print -exec cp {} /"$BIN" \; &&\

@@ -36,7 +36,7 @@ jobs:
   binary:
     name: Release binaries
     needs: make_matrix
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: needs.make_matrix.outputs.do_artifact == 1
     strategy:
       matrix: ${{ fromJson(needs.make_matrix.outputs.bin_targets) }}
@@ -44,7 +44,6 @@ jobs:
       - name: Log matrix
         run: |
           echo bin=${{ matrix.bin }}
-          echo os=${{ matrix.os }}
           echo target=${{ matrix.target }}
           echo asset_postfix=${{ matrix.asset_postfix }}
       - name: Checkout code

@@ -3,18 +3,32 @@ name: 'Release'
 
 on:
   workflow_dispatch:
-      bump:
-        type: choice
-        description: Which semver number to bump
-        options:
-          - major
-          - minor
-          - patch
-        required: true
+    bump:
+      type: choice
+      description: Which semver number to bump
+      options:
+        - major
+        - minor
+        - patch
+      required: true
 
 jobs:
-  make_matrix:
+  next_version:
+    name: Next version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get current version
+        id: prev_ver
+        run: |
+          set -x
+          PREV_VER="$(cargo metadata --no-deps --all-features --format-version=1 | jq -r .packages[].version)"
+          echo ::set-output name=previous_version::"$PREV_VER"
+
+  binary_matrix:
     name: Make matrix
+    needs: next_version
     runs-on: ubuntu-latest
     outputs:
       bin_targets: ${{ steps.generate_matrix.outputs.bin_targets }}
@@ -39,11 +53,11 @@ jobs:
 
   binary:
     name: Release binaries
-    needs: make_matrix
+    needs: binary_matrix
     runs-on: ubuntu-latest
-    if: needs.make_matrix.outputs.do_artifact == 1
+    if: needs.binary_matrix.outputs.do_artifact == 1
     strategy:
-      matrix: ${{ fromJson(needs.make_matrix.outputs.bin_targets) }}
+      matrix: ${{ fromJson(needs.binary_matrix.outputs.bin_targets) }}
     steps:
       - name: Log matrix
         run: |

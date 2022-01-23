@@ -2,11 +2,15 @@
 name: 'Release'
 
 on:
-  #push:
-  #  branches:
-  #    - 'main'
-  #    - 'master'
   workflow_dispatch:
+      bump:
+        type: choice
+        description: Which semver number to bump
+        options:
+          - major
+          - minor
+          - patch
+        required: true
 
 jobs:
   make_matrix:

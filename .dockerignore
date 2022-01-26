@@ -1,5 +1,6 @@
-.idea/
-.git/
-target/
-ci/
-.github/
+*
+!Cargo.toml
+!Cargo.lock
+!src/
+!deny.toml
+!upgrade_docker_base.sh

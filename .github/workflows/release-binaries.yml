@@ -34,7 +34,7 @@ jobs:
         id: next_ver
         run: |
           set -x
-          NEXT_VER="$(curl -f https://next.tryin.top/${{ github.event.inputs.bump }}/${PREV_VER})"
+          NEXT_VER="$(curl -f https://next.tryin.top/${{ github.event.inputs.bump }}/${{ steps.prev_ver.outputs.previous_version }})"
           echo ::set-output name=next_version::"NEXT_VER"
 
   binary_matrix:

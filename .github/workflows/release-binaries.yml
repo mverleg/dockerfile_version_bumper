@@ -29,14 +29,15 @@ jobs:
         run: |
           set -x
           PREV_VER="$(cargo metadata --no-deps --all-features --format-version=1 | jq -r .packages[].version)"
-          echo "current (soon to be previous) version: $PREV_VER"
+          echo "current (soon to be previous) version: v$PREV_VER"
           echo ::set-output name=previous_version::"$PREV_VER"
       - name: Get next version
         id: next_ver
         run: |
           set -x
+          echo "going to bump ${{ github.event.inputs.bump }} of v${{ steps.prev_ver.outputs.previous_version }}"
           NEXT_VER="$(curl -f https://next.tryin.top/${{ github.event.inputs.bump }}/${{ steps.prev_ver.outputs.previous_version }})"
-          echo "next (soon to be current) version: $NEXT_VER"
+          echo "next (soon to be current) version: v$NEXT_VER"
           echo ::set-output name=next_version::"$NEXT_VER"
 
   binary_matrix:

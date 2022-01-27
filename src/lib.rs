@@ -7,6 +7,7 @@ use ::log::debug;
 use crate::dvb::data::Parent;
 use crate::dvb::read::{extract_parents, read_all_dockerfiles};
 use crate::dvb::uptag::find_latest_tag;
+use crate::dvb::write::update_all_dockerfiles;
 
 mod dvb;
 
@@ -27,6 +28,7 @@ pub async fn bump_dockerfiles(
     let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;
     let latest_tags = find_latest_tag(parents, bump_major).await?;
+    update_all_dockerfiles(&latest_tags).await?;
     Ok(latest_tags
         .into_iter()
         .map(|(parent, new_tag)| (parent.explode(), new_tag))

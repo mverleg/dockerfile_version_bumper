@@ -40,21 +40,28 @@ mod tests {
 
     #[test]
     fn single() {
+        let path = PathBuf::from("/fake/Dockerfile");
         let tag_str = "1.2.4-alpha";
         let dockerfile = Rc::new(Dockerfile::new(
-            PathBuf::from("/fake/Dockerfile"),
+            path.clone(),
             format!("namespace/image:{} AS build\n", &tag_str)));
         let tag_pattern = tag_to_re(&tag_str).unwrap();
-        let tag = parse_tag(&tag_pattern, tag_str).unwrap();
+        let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
+        let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
+
         let parent = Parent::new(
             dockerfile,
             "namespace/image".to_owned(),
             tag_pattern,
-            tag,
+            tag_old,
             "AS build".to_owned(),
         );
+
         let tags = updated_dockerfiles_content(&indexmap![
-            parent => Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0)),
+            parent => tag_new.clone(),
+        ]);
+        assert_eq!(tags, indexmap![
+            path.clone() => format!("namespace/image:{} AS build\n", &tag_new),
         ]);
     }
 
@@ -62,47 +69,55 @@ mod tests {
     fn multi_file_multi_tag() {
         let tag1_str = "1.2.4-alpha";
         let tag1_pattern = tag_to_re(&tag1_str).unwrap();
-        let tag1 = parse_tag(&tag1_pattern, tag1_str).unwrap();
+        let tag_old1 = parse_tag(&tag1_pattern, tag1_str).unwrap();
+        let tag_new1 = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
         let tag2_str = "0.3.7-rc2";
         let tag2_pattern = tag_to_re(&tag2_str).unwrap();
-        let tag2 = parse_tag(&tag2_pattern, tag2_str).unwrap();
+        let tag_old2 = parse_tag(&tag2_pattern, tag2_str).unwrap();
+        let tag_new2 = Tag::new("0.4.4-rc1".to_owned(), (0, 4, 4, 1));
 
+        let path1 = "/fake/one/Dockerfile";
         let dockerfile_a = Rc::new(Dockerfile::new(
-            PathBuf::from("/fake/one/Dockerfile"),
+            PathBuf::from(path1),
             format!("namespace/image:{} AS build\n\
                     namespace/image:{}\n",
                     &tag1_str, &tag2_str)));
+        let path2 = "/fake/two/Dockerfile";
         let dockerfile_b = Rc::new(Dockerfile::new(
-            PathBuf::from("/fake/two/Dockerfile"),
+            PathBuf::from(path2),
             format!("namespace/image2:{} AS pre\n", &tag1_str)));
 
         let parent_a1 = Parent::new(
             dockerfile_a.clone(),
             "namespace/image".to_owned(),
             tag1_pattern.clone(),
-            tag1.clone(),
+            tag_old1.clone(),
             "AS build".to_owned(),
         );
         let parent_a2 = Parent::new(
             dockerfile_a,
             "namespace/image".to_owned(),
             tag2_pattern,
-            tag2,
+            tag_old2,
             "".to_owned(),
         );
         let parent_b1 = Parent::new(
             dockerfile_b,
             "namespace/image2".to_owned(),
             tag1_pattern,
-            tag1,
+            tag_old1,
             "AS pre".to_owned(),
         );
 
         let tags = updated_dockerfiles_content(&indexmap![
-            parent_a1 => Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0)),
-            parent_a2 => Tag::new("0.4.4-rc1".to_owned(), (0, 4, 4, 1)),
-            parent_b1 => Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0)),
+            parent_a1 => tag_new1.clone(),
+            parent_a2 => tag_new2,
+            parent_b1 => tag_new1,
+        ]);
+        assert_eq!(tags, indexmap![
+            path1.clone() => format!("namespace/image:{} AS build\n", &tag_new1),
+            path2.clone() => format!("namespace/image:{} AS build\n", &tag_new2),
         ]);
     }
 }

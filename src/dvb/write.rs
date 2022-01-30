@@ -9,22 +9,22 @@ use crate::Parent;
 
 pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>) -> Result<(), String> {
     let new_content = updated_dockerfiles_content(latest_tags);
+    // fs::write(parent.dockerfile().path(), content)
+    //     .map_err(|_| format!("failed to update Dockerfile '{}'", parent.name()))?
     unimplemented!()  //TODO @mark: TEMPORARY! REMOVE THIS!
 }
 
 fn updated_dockerfiles_content(latest_tags: &IndexMap<Parent, Tag>) -> IndexMap<PathBuf, String> {
     //TODO @mark: what if multiple updates to same Dockerfile?
-    let mut files: HashMap<&PathBuf, String> = HashMap::new();
+    let mut files: IndexMap<PathBuf, String> = IndexMap::new();
     for (parent, new_tag) in latest_tags.iter() {
-        let content: &mut String = files.entry(parent.dockerfile().path())
+        let content: &mut String = files.entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
         let q: String = parent.tag_pattern().replace_all(content, format!("{}", new_tag)).into_owned();
         *content = q;
         // let content = format!("# updated: {} {} -> {}!\n{}", parent.name(), parent.tag(), new_tag, parent.dockerfile().content());
-        // fs::write(parent.dockerfile().path(), content)
-        //     .map_err(|_| format!("failed to update Dockerfile '{}'", parent.name()))?
     }
-    unimplemented!()  //TODO @mark: TEMPORARY! REMOVE THIS!
+    files
 }
 
 #[cfg(test)]
@@ -77,16 +77,16 @@ mod tests {
         let tag_old2 = parse_tag(&tag2_pattern, tag2_str).unwrap();
         let tag_new2 = Tag::new("0.4.4-rc1".to_owned(), (0, 4, 4, 1));
 
-        let path1 = "/fake/one/Dockerfile";
+        let path1 = PathBuf::from("/fake/one/Dockerfile");
         let dockerfile_a = Rc::new(Dockerfile::new(
-            PathBuf::from(path1),
+            path1.clone(),
             format!("namespace/image:{} AS build\n\
-                    namespace/image:{}\n",
+                    namespace/image2:{}\n",
                     &tag1_str, &tag2_str)));
-        let path2 = "/fake/two/Dockerfile";
+        let path2 = PathBuf::from("/fake/two/Dockerfile");
         let dockerfile_b = Rc::new(Dockerfile::new(
-            PathBuf::from(path2),
-            format!("namespace/image2:{} AS pre\n", &tag1_str)));
+            path2.clone(),
+            format!("namespace/image:{} AS pre\n", &tag1_str)));
 
         let parent_a1 = Parent::new(
             dockerfile_a.clone(),
@@ -112,11 +112,12 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent_a1 => tag_new1.clone(),
-            parent_a2 => tag_new2,
-            parent_b1 => tag_new1,
+            parent_a2 => tag_new2.clone(),
+            parent_b1 => tag_new1.clone(),
         ]);
         assert_eq!(tags, indexmap![
-            path1.clone() => format!("namespace/image:{} AS build\n", &tag_new1),
+            path1.clone() => format!("namespace/image:{} AS build\n\
+                    namespace/image2:{}\n", &tag_new1, &tag_new2),
             path2.clone() => format!("namespace/image:{} AS build\n", &tag_new2),
         ]);
     }

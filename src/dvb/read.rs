@@ -80,7 +80,7 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
     }
 }
 
-fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
+pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     let tag_escaped_for_re = &tag_str.replace('-', r"\-").replace('.', r"\.");
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
     let tag_full_match_re = format!("^{}$", tag_digits_replaced);

@@ -42,18 +42,19 @@ mod tests {
     fn single() {
         let tag_str = "1.2.4-alpha";
         let dockerfile = Rc::new(Dockerfile::new(
-            PathBuf::from("/fake/Dockerfile").unwrap(),
+            PathBuf::from("/fake/Dockerfile"),
             format!("namespace/image:{} AS build\n", &tag_str)));
-        let tag_pattern = tag_to_re(&tag_str)?;
-        let tag = parse_tag(&tag_pattern, &tag_str)?;
+        let tag_pattern = tag_to_re(&tag_str).unwrap();
+        let tag = parse_tag(&tag_pattern, tag_str).unwrap();
+        let parent = Parent::new(
+            dockerfile,
+            "namespace/image".to_owned(),
+            tag_pattern,
+            tag,
+            "AS build".to_owned(),
+        );
         let tags = updated_dockerfiles_content(&indexmap![
-            Parent::new {
-                dockerfile,
-                name: "namespace/image",
-                tag_pattern,
-                tag,
-                suffix: "AS build",
-            } => Tag::new(tag_str, (1, 3, 2, 0)),
+            parent => Tag::new(tag_str.to_owned(), (1, 3, 2, 0)),
         ]);
     }
 }

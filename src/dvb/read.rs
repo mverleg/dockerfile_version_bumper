@@ -8,14 +8,13 @@ use ::lazy_static::lazy_static;
 use ::log::{info, warn};
 use ::regex::Regex;
 
-use crate::dvb::data::parse_tag;
+use crate::dvb::convert::{parse_tag, tag_to_re};
 use crate::Parent;
 
 use super::data::Dockerfile;
 
 lazy_static! {
     static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
-    static ref TAG_DIGITS_RE: Regex = Regex::new(r"[0-9]+").unwrap();
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {
@@ -78,19 +77,6 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
             Ok(None)
         }
     }
-}
-
-pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
-    let tag_escaped_for_re = &tag_str.replace('-', r"\-").replace('.', r"\.");
-    let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
-    let tag_full_match_re = format!("^{}$", tag_digits_replaced);
-    let regex = Regex::new(tag_full_match_re.as_ref()).map_err(|err| {
-        format!(
-            "tag could not be turned into regex pattern; tag: {}, err: {}",
-            tag_str, err
-        )
-    })?;
-    Ok(regex)
 }
 
 #[cfg(test)]

@@ -146,26 +146,3 @@ impl hash::Hash for Tag {
         state.write_u32(self.nrs.3);
     }
 }
-
-pub fn parse_tag(tag_pattern: &Regex, tag: impl Into<String>) -> Result<Tag, String> {
-    let tag = tag.into();
-    let parts = tag_pattern.captures(&tag).ok_or_else(|| {
-        format!(
-            "could not extract digits from tag; tag: {}, pattern: {}, failed to capture",
-            &tag,
-            tag_pattern.as_str()
-        )
-    })?;
-    let nrs = (
-        match_to_nr(parts.get(1)),
-        match_to_nr(parts.get(2)),
-        match_to_nr(parts.get(3)),
-        match_to_nr(parts.get(4)),
-    );
-    Ok(Tag::new(tag, nrs))
-}
-
-fn match_to_nr(mtch: Option<Match>) -> u32 {
-    mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap())
-        .unwrap_or_else(|| 0)
-}

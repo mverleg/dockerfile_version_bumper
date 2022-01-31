@@ -7,8 +7,9 @@ use ::lazy_static::lazy_static;
 use ::log::debug;
 use ::regex::Regex;
 use ::reqwest::Client;
+use crate::dvb::convert::parse_tag;
+use crate::dvb::data::Tag;
 
-use crate::dvb::data::{parse_tag, Tag};
 use crate::Parent;
 
 lazy_static! {

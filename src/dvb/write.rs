@@ -33,8 +33,8 @@ mod tests {
 
     use ::indexmap::indexmap;
 
-    use crate::dvb::data::{Dockerfile, parse_tag};
-    use crate::dvb::read::tag_to_re;
+    use crate::dvb::convert::{parse_tag, tag_to_re};
+    use crate::dvb::data::Dockerfile;
 
     use super::*;
 

@@ -1,24 +1,7 @@
-use ::std::cmp::Ordering;
-use ::std::collections::HashSet;
-use ::std::fmt;
-use ::std::fs::read_to_string;
-use ::std::hash;
-use ::std::hash::Hasher;
-use ::std::path::Path;
-use ::std::path::PathBuf;
-use ::std::rc::Rc;
-
-use ::derive_getters::Getters;
-use ::derive_new::new;
 use ::lazy_static::lazy_static;
-use ::log::{info, warn};
 use ::regex::Match;
 use ::regex::Regex;
 use crate::dvb::data::Tag;
-
-use crate::Parent;
-
-use super::data::Dockerfile;
 
 lazy_static! {
     static ref TAG_DIGITS_RE: Regex = Regex::new(r"[0-9]+").unwrap();

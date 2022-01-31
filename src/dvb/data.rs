@@ -7,7 +7,6 @@ use ::std::rc::Rc;
 
 use ::derive_getters::Getters;
 use ::derive_new::new;
-use ::regex::Match;
 use ::regex::Regex;
 
 #[derive(Debug, Getters, new)]

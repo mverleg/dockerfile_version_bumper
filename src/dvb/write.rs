@@ -18,9 +18,10 @@ fn updated_dockerfiles_content(latest_tags: &IndexMap<Parent, Tag>) -> IndexMap<
     for (parent, new_tag) in latest_tags.iter() {
         let content: &mut String = files.entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
-        let q: String = parent.tag_pattern().replace_all(content, format!("{}", new_tag)).into_owned();
-        *content = q;
-        // let content = format!("# updated: {} {} -> {}!\n{}", parent.name(), parent.tag(), new_tag, parent.dockerfile().content());
+        dbg!(&parent.tag_pattern());  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(&content);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        debug_assert!(parent.tag_pattern().is_match(content), "did not find image tag in dockerfile");
+        *content = parent.tag_pattern().replace_all(content, format!("{}", new_tag)).into_owned();
     }
     files
 }
@@ -145,8 +146,8 @@ mod tests {
             parent => tag_new.clone(),
         ]);
         assert_eq!(tags, indexmap![
-            path.clone() => format!("FROM namespace/image:{} AS build\n", &tag_new),
+            path.clone() => format!("FROM namespace/image:{} AS build\nRUN echo 'Using \
+                namespace/image:{} AS build\n", &tag_new, &tag_str),
         ]);
     }
-
 }

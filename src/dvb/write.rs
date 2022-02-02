@@ -32,26 +32,29 @@ mod tests {
 
     use ::indexmap::indexmap;
 
-    use crate::dvb::convert::{parse_tag, tag_to_re};
+    use crate::dvb::convert::{image_tag_to_re, parse_tag, tag_to_re};
     use crate::dvb::data::Dockerfile;
 
     use super::*;
 
     #[test]
     fn single() {
+        let image = "namespace/image".to_owned();
         let path = PathBuf::from("/fake/Dockerfile");
         let tag_str = "1.2.4-alpha";
         let dockerfile = Rc::new(Dockerfile::new(
             path.clone(),
-            format!("FROM namespace/image:{} AS build\n", &tag_str)));
+            format!("FROM {}:{} AS build\n", &image, &tag_str)));
         let tag_pattern = tag_to_re(&tag_str).unwrap();
+        let image_pattern = image_tag_to_re(&image, &tag_str).unwrap();
         let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
         let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
         let parent = Parent::new(
             dockerfile,
-            "namespace/image".to_owned(),
+            image,
             tag_pattern,
+            image_pattern,
             tag_old,
             "AS build".to_owned(),
         );
@@ -66,38 +69,44 @@ mod tests {
 
     #[test]
     fn multi_file_multi_tag() {
+        let image1 = "namespace/image".to_owned();
         let tag1_str = "1.2.4-alpha";
         let tag1_pattern = tag_to_re(&tag1_str).unwrap();
+        let image1_pattern = image_tag_to_re(&image1, &tag1_str).unwrap();
         let tag_old1 = parse_tag(&tag1_pattern, tag1_str).unwrap();
         let tag_new1 = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
+        let image2 = "namespace/image2".to_owned();
         let tag2_str = "0.3.7-rc2";
         let tag2_pattern = tag_to_re(&tag2_str).unwrap();
+        let image2_pattern = image_tag_to_re(&image2, &tag2_str).unwrap();
         let tag_old2 = parse_tag(&tag2_pattern, tag2_str).unwrap();
         let tag_new2 = Tag::new("0.4.4-rc1".to_owned(), (0, 4, 4, 1));
 
         let path1 = PathBuf::from("/fake/one/Dockerfile");
         let dockerfile_a = Rc::new(Dockerfile::new(
             path1.clone(),
-            format!("FROM namespace/image:{} AS build\n\
-                    namespace/image2:{}\n",
-                    &tag1_str, &tag2_str)));
+            format!("FROM {}:{} AS build\n\
+                    {}:{}\n",
+                    &image1, &tag1_str, &image2, &tag2_str)));
         let path2 = PathBuf::from("/fake/two/Dockerfile");
         let dockerfile_b = Rc::new(Dockerfile::new(
             path2.clone(),
-            format!("FROM namespace/image:{} AS pre\n", &tag1_str)));
+            format!("FROM {}:{} AS pre\n", &image1, &tag1_str)));
 
         let parent_a1 = Parent::new(
             dockerfile_a.clone(),
-            "namespace/image".to_owned(),
+            image1.clone(),
             tag1_pattern.clone(),
+            image1_pattern.clone(),
             tag_old1.clone(),
             "AS build".to_owned(),
         );
         let parent_a2 = Parent::new(
             dockerfile_a,
-            "namespace/image".to_owned(),
+            image1,
             tag2_pattern,
+            image2_pattern,
             tag_old2,
             "".to_owned(),
         );
@@ -105,6 +114,7 @@ mod tests {
             dockerfile_b,
             "namespace/image2".to_owned(),
             tag1_pattern,
+            image1_pattern,
             tag_old1,
             "AS pre".to_owned(),
         );
@@ -123,21 +133,24 @@ mod tests {
 
     #[test]
     fn do_not_match_in_run_cmd() {
+        let image = "namespace/image".to_owned();
         let path = PathBuf::from("/fake/Dockerfile");
         let tag_str = "1.2.4-alpha";
         let dockerfile = Rc::new(Dockerfile::new(
             path.clone(),
-            format!("FROM namespace/image:{} AS build\n\
-            RUN echo 'Using namespace/image:{} AS build'\n",
-                    &tag_str, &tag_str)));
+            format!("FROM {}:{} AS build\n\
+            RUN echo 'Using {}:{} AS build'\n",
+                    &image, &tag_str, &image, &tag_str)));
         let tag_pattern = tag_to_re(&tag_str).unwrap();
+        let image_pattern = image_tag_to_re(&image, &tag_str).unwrap();
         let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
         let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
         let parent = Parent::new(
             dockerfile,
-            "namespace/image".to_owned(),
+            image,
             tag_pattern,
+            image_pattern,
             tag_old,
             "AS build".to_owned(),
         );

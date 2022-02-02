@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use ::lazy_static::lazy_static;
 use ::regex::Match;
 use ::regex::Regex;
@@ -7,9 +8,26 @@ lazy_static! {
     static ref TAG_DIGITS_RE: Regex = Regex::new(r"[0-9]+").unwrap();
 }
 
-pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
+fn tag_re_str(tag_str: &str) -> String {
     let tag_escaped_for_re = &tag_str.replace('-', r"\-").replace('.', r"\.");
     let tag_digits_replaced = TAG_DIGITS_RE.replace_all(tag_escaped_for_re, "([0-9]+)");
+    tag_digits_replaced.into_owned()
+}
+
+pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
+    let tag_digits_replaced = tag_re_str(tag_str);
+    let tag_full_match_re = format!("^{}$", tag_digits_replaced);
+    let regex = Regex::new(tag_full_match_re.as_ref()).map_err(|err| {
+        format!(
+            "tag could not be turned into regex pattern; tag: {}, err: {}",
+            tag_str, err
+        )
+    })?;
+    Ok(regex)
+}
+
+pub(crate) fn image_tag_to_re(image_str: &str, tag_str: &str) -> Result<Regex, String> {
+    let tag_digits_replaced = tag_re_str(tag_str);
     let tag_full_match_re = format!("^{}$", tag_digits_replaced);
     let regex = Regex::new(tag_full_match_re.as_ref()).map_err(|err| {
         format!(

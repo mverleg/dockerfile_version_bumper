@@ -8,7 +8,7 @@ use ::lazy_static::lazy_static;
 use ::log::{info, warn};
 use ::regex::Regex;
 
-use crate::dvb::convert::{parse_tag, tag_to_re};
+use crate::dvb::convert::{image_tag_to_re, parse_tag, tag_to_re};
 use crate::Parent;
 
 use super::data::Dockerfile;
@@ -55,12 +55,14 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
             let name = matches[1].to_owned();
             let tag_str = &matches[2];
             let tag_pattern = tag_to_re(tag_str)?;
+            let image_pattern = image_tag_to_re("", tag_str)?;
             let tag = parse_tag(&tag_pattern, tag_str)?;
             let suffix = matches[3].to_owned();
             Ok(Some(Parent::new(
                 dockerfile,
                 name,
                 tag_pattern,
+                image_pattern,
                 tag,
                 suffix,
             )))
@@ -102,6 +104,7 @@ mod tests {
                 dockerfile,
                 "mverleg/rust_nightly_musl_base".to_owned(),
                 Regex::new("").unwrap(),
+                Regex::new("").unwrap(),
                 Tag::new("2021-10-17_11".to_owned(), (2021, 10, 17, 11)),
                 "".to_owned()
             )
@@ -123,6 +126,7 @@ mod tests {
             Parent::new(
                 dockerfile,
                 "node".to_owned(),
+                Regex::new("").unwrap(),
                 Regex::new("").unwrap(),
                 Tag::new("lts-alpine3.14".to_owned(), (3, 14, 0, 0)),
                 "AS editor".to_owned()

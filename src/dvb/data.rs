@@ -41,6 +41,7 @@ pub struct Parent {
     dockerfile: Rc<Dockerfile>,
     name: String,
     tag_pattern: Regex,
+    image_pattern: Regex,
     tag: Tag,
     suffix: String,
 }

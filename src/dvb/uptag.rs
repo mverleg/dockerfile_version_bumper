@@ -120,6 +120,7 @@ mod tests {
             dockerfile,
             "".to_owned(),
             Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
+            Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
             "AS build".to_owned(),
         );
@@ -136,6 +137,7 @@ mod tests {
         let parent = Parent::new(
             dockerfile,
             "".to_owned(),
+            Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
             "AS build".to_owned(),

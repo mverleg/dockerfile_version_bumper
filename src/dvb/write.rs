@@ -20,6 +20,7 @@ fn updated_dockerfiles_content(latest_tags: &IndexMap<Parent, Tag>) -> Result<In
         let content: &mut String = files.entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
         let image_pattern = image_tag_to_re(parent.image_name(), parent.tag().name(), parent.suffix())?;
+        dbg!(&image_pattern);  //TODO @mark: TEMPORARY! REMOVE THIS!
         dbg!(&content);  //TODO @mark: TEMPORARY! REMOVE THIS!
         debug_assert!(image_pattern.is_match(content), "did not find image tag in dockerfile");
         *content = parent.tag_pattern().replace_all(content, format!("{}", new_tag)).into_owned();

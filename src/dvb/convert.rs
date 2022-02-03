@@ -55,3 +55,14 @@ fn match_to_nr(mtch: Option<Match>) -> u32 {
     mtch.map(|mtch| mtch.as_str().parse::<u32>().unwrap())
         .unwrap_or_else(|| 0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn image_tag_to_re_test() {
+        let pattern = image_tag_to_re("namespace/image", "1.2.4-alpha", "AS build").unwrap();
+        assert_eq!(pattern.as_str(), r"^FROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build$");
+    }
+}

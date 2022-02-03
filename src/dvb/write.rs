@@ -32,7 +32,7 @@ mod tests {
 
     use ::indexmap::indexmap;
 
-    use crate::dvb::convert::{image_tag_to_re, parse_tag, tag_to_re};
+    use crate::dvb::convert::{parse_tag, tag_to_re};
     use crate::dvb::data::Dockerfile;
 
     use super::*;
@@ -46,7 +46,6 @@ mod tests {
             path.clone(),
             format!("FROM {}:{} AS build\n", &image, &tag_str)));
         let tag_pattern = tag_to_re(&tag_str).unwrap();
-        let image_pattern = image_tag_to_re(&image, &tag_str).unwrap();
         let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
         let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
@@ -54,7 +53,6 @@ mod tests {
             dockerfile,
             image,
             tag_pattern,
-            image_pattern,
             tag_old,
             "AS build".to_owned(),
         );
@@ -72,14 +70,12 @@ mod tests {
         let image1 = "namespace/image".to_owned();
         let tag1_str = "1.2.4-alpha";
         let tag1_pattern = tag_to_re(&tag1_str).unwrap();
-        let image1_pattern = image_tag_to_re(&image1, &tag1_str).unwrap();
         let tag_old1 = parse_tag(&tag1_pattern, tag1_str).unwrap();
         let tag_new1 = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
         let image2 = "namespace/image2".to_owned();
         let tag2_str = "0.3.7-rc2";
         let tag2_pattern = tag_to_re(&tag2_str).unwrap();
-        let image2_pattern = image_tag_to_re(&image2, &tag2_str).unwrap();
         let tag_old2 = parse_tag(&tag2_pattern, tag2_str).unwrap();
         let tag_new2 = Tag::new("0.4.4-rc1".to_owned(), (0, 4, 4, 1));
 
@@ -98,7 +94,6 @@ mod tests {
             dockerfile_a.clone(),
             image1.clone(),
             tag1_pattern.clone(),
-            image1_pattern.clone(),
             tag_old1.clone(),
             "AS build".to_owned(),
         );
@@ -106,7 +101,6 @@ mod tests {
             dockerfile_a,
             image1,
             tag2_pattern,
-            image2_pattern,
             tag_old2,
             "".to_owned(),
         );
@@ -114,7 +108,6 @@ mod tests {
             dockerfile_b,
             "namespace/image2".to_owned(),
             tag1_pattern,
-            image1_pattern,
             tag_old1,
             "AS pre".to_owned(),
         );
@@ -142,7 +135,6 @@ mod tests {
             RUN echo 'Using {}:{} AS build'\n",
                     &image, &tag_str, &image, &tag_str)));
         let tag_pattern = tag_to_re(&tag_str).unwrap();
-        let image_pattern = image_tag_to_re(&image, &tag_str).unwrap();
         let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
         let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
 
@@ -150,7 +142,6 @@ mod tests {
             dockerfile,
             image,
             tag_pattern,
-            image_pattern,
             tag_old,
             "AS build".to_owned(),
         );

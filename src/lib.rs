@@ -65,7 +65,7 @@ fn filter_parents(
         HashSet::from_iter(allow_parent_names.iter().cloned());
     let parents = all_parents
         .into_iter()
-        .filter(|parent| allow_parent_names.contains(parent.name()))
+        .filter(|parent| allow_parent_names.contains(parent.image_name()))
         .inspect(|parent| debug!("including parent (-p): {}", parent))
         .collect::<HashSet<_>>();
     if parents.is_empty() {

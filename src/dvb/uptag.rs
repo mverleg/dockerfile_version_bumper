@@ -26,7 +26,7 @@ pub async fn find_latest_tag(
         (
             format!(
                 "https://registry.hub.docker.com/v1/repositories/{}/tags",
-                &parent.name()
+                &parent.image_name()
             ),
             parent,
         )
@@ -42,7 +42,7 @@ pub async fn find_latest_tag(
             parent1
                 .dockerfile()
                 .cmp(parent2.dockerfile())
-                .then(parent1.name().cmp(parent2.name()))
+                .then(parent1.image_name().cmp(parent2.image_name()))
         })
         .collect::<IndexMap<Parent, Tag>>())
 }
@@ -120,7 +120,6 @@ mod tests {
             dockerfile,
             "".to_owned(),
             Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
-            Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
             "AS build".to_owned(),
         );
@@ -137,7 +136,6 @@ mod tests {
         let parent = Parent::new(
             dockerfile,
             "".to_owned(),
-            Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Regex::new(r"^([0-9]+)\.([0-9]+)\.([0-9]+)\-alpine$").unwrap(),
             Tag::new("2.2.8-alpine".to_owned(), (2, 2, 8, 0)),
             "AS build".to_owned(),

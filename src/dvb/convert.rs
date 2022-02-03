@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use ::lazy_static::lazy_static;
 use ::regex::Match;
 use ::regex::Regex;

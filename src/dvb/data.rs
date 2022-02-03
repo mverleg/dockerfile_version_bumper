@@ -39,9 +39,8 @@ impl Ord for Dockerfile {
 #[derive(Debug, Getters, new)]
 pub struct Parent {
     dockerfile: Rc<Dockerfile>,
-    name: String,
+    image_name: String,
     tag_pattern: Regex,
-    image_pattern: Regex,
     tag: Tag,
     suffix: String,
 }
@@ -50,7 +49,7 @@ impl Parent {
     pub fn explode(self) -> (PathBuf, String, Tag) {
         let Parent {
             dockerfile,
-            name,
+            image_name: name,
             tag,
             ..
         } = self;
@@ -64,7 +63,7 @@ impl fmt::Display for Parent {
             write!(
                 f,
                 "{}:{}@{}",
-                &self.name,
+                &self.image_name,
                 &self.tag,
                 self.tag_pattern.as_str()
             )
@@ -72,7 +71,7 @@ impl fmt::Display for Parent {
             write!(
                 f,
                 "{}:{}@{} {}",
-                &self.name,
+                &self.image_name,
                 &self.tag,
                 self.tag_pattern.as_str(),
                 &self.suffix
@@ -84,7 +83,7 @@ impl fmt::Display for Parent {
 impl PartialEq for Parent {
     fn eq(&self, other: &Self) -> bool {
         self.dockerfile.path() == other.dockerfile.path()
-            && self.name == other.name
+            && self.image_name == other.image_name
             && self.tag == other.tag
     }
 }
@@ -94,7 +93,7 @@ impl Eq for Parent {}
 impl hash::Hash for Parent {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.dockerfile.path().hash(state);
-        state.write(self.name.as_bytes());
+        state.write(self.image_name.as_bytes());
         state.write(self.tag_pattern.as_str().as_bytes());
         self.tag.hash(state);
     }

@@ -1,6 +1,7 @@
 use ::std::path::PathBuf;
 
 use ::indexmap::IndexMap;
+use crate::dvb::convert::image_tag_to_re;
 
 use crate::dvb::data::Tag;
 use crate::Parent;
@@ -12,18 +13,19 @@ pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>) -> Resu
     unimplemented!()  //TODO @mark: TEMPORARY! REMOVE THIS!
 }
 
-fn updated_dockerfiles_content(latest_tags: &IndexMap<Parent, Tag>) -> IndexMap<PathBuf, String> {
+fn updated_dockerfiles_content(latest_tags: &IndexMap<Parent, Tag>) -> Result<IndexMap<PathBuf, String>, String> {
     //TODO @mark: what if multiple updates to same Dockerfile?
     let mut files: IndexMap<PathBuf, String> = IndexMap::new();
     for (parent, new_tag) in latest_tags.iter() {
         let content: &mut String = files.entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
+        let image_pattern = image_tag_to_re(parent.image_name(), parent.tag().name())?;
         dbg!(&parent.tag_pattern());  //TODO @mark: TEMPORARY! REMOVE THIS!
         dbg!(&content);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        debug_assert!(parent.tag_pattern().is_match(content), "did not find image tag in dockerfile");
+        debug_assert!(image_pattern.is_match(content), "did not find image tag in dockerfile");
         *content = parent.tag_pattern().replace_all(content, format!("{}", new_tag)).into_owned();
     }
-    files
+    Ok(files)
 }
 
 #[cfg(test)]
@@ -59,7 +61,7 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
-        ]);
+        ]).unwrap();
         assert_eq!(tags, indexmap![
             path.clone() => format!("FROM namespace/image:{} AS build\n", &tag_new),
         ]);
@@ -116,7 +118,7 @@ mod tests {
             parent_a1 => tag_new1.clone(),
             parent_a2 => tag_new2.clone(),
             parent_b1 => tag_new1.clone(),
-        ]);
+        ]).unwrap();
         assert_eq!(tags, indexmap![
             path1.clone() => format!("FROM namespace/image:{} AS build\n\
                     namespace/image2:{}\n", &tag_new1, &tag_new2),
@@ -148,7 +150,7 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
-        ]);
+        ]).unwrap();
         assert_eq!(tags, indexmap![
             path.clone() => format!("FROM namespace/image:{} AS build\nRUN echo 'Using \
                 namespace/image:{} AS build\n", &tag_new, &tag_str),

@@ -25,16 +25,12 @@ pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
     Ok(regex)
 }
 
-pub(crate) fn image_tag_to_re(image_str: &str, tag_str: &str) -> Result<Regex, String> {
-    let tag_digits_replaced = tag_re_str(tag_str);
-    let tag_full_match_re = format!("^{}$", tag_digits_replaced);
-    let regex = Regex::new(tag_full_match_re.as_ref()).map_err(|err| {
-        format!(
-            "tag could not be turned into regex pattern; tag: {}, err: {}",
-            tag_str, err
-        )
-    })?;
-    Ok(regex)
+pub(crate) fn image_tag_to_re(image: &str, tag: &str, suffix: &str) -> Result<Regex, String> {
+    let tag_digits_replaced = tag_re_str(tag);
+    let pattern_str = format!("^FROM\\s+{}:{}\\s+{}$", image, tag_digits_replaced, suffix);
+    let pattern = Regex::new(&pattern_str).map_err(|err| {
+        format!("image and tag could not be turned into regex pattern; {}, err: {}", pattern_str, err) })?;
+    Ok(pattern)
 }
 
 pub fn parse_tag(tag_pattern: &Regex, tag: impl Into<String>) -> Result<Tag, String> {

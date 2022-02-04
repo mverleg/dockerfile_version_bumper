@@ -32,13 +32,11 @@ fn updated_dockerfiles_content(
         );
         let new_image = format!("FROM {}:{} {}", parent.image_name(), new_tag, parent.suffix());
         dbg!(&new_image);
-        let intermediate = parent   //TODO @mark: TEMPORARY! REMOVE THIS!
-            .tag_pattern()   //TODO @mark: TEMPORARY! REMOVE THIS!
+        let intermediate = image_pattern   //TODO @mark: TEMPORARY! REMOVE THIS!
             .replace_all(content, &new_image)   //TODO @mark: TEMPORARY! REMOVE THIS!
             .into_owned();   //TODO @mark: TEMPORARY! REMOVE THIS!
         dbg!(intermediate);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        *content = parent
-            .tag_pattern()
+        *content = image_pattern
             .replace_all(content, new_image)
             .into_owned();
     }

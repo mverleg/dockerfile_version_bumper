@@ -1,6 +1,7 @@
 use ::lazy_static::lazy_static;
 use ::regex::Match;
 use ::regex::Regex;
+
 use crate::dvb::data::Tag;
 
 lazy_static! {
@@ -8,7 +9,10 @@ lazy_static! {
 }
 
 pub(crate) fn escape_re(pattern: &str) -> String {
-    pattern.replace('-', r"\-").replace('.', r"\.").replace('/', r"\/")
+    pattern
+        .replace('-', r"\-")
+        .replace('.', r"\.")
+        .replace('/', r"\/")
 }
 
 fn tag_re_str(tag_str: &str) -> String {
@@ -31,10 +35,18 @@ pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
 
 pub(crate) fn image_tag_to_re(image: &str, tag: &str, suffix: &str) -> Result<Regex, String> {
     let tag_digits_replaced = tag_re_str(tag);
-    let pattern_str = format!(r"\bFROM\s+{}:{}\s+{}\b", escape_re(image),
-        tag_digits_replaced, escape_re(suffix));
+    let pattern_str = format!(
+        r"\bFROM\s+{}:{}\s+{}\b",
+        escape_re(image),
+        tag_digits_replaced,
+        escape_re(suffix)
+    );
     let pattern = Regex::new(&pattern_str).map_err(|err| {
-        format!("image and tag could not be turned into regex pattern; {}, err: {}", pattern_str, err) })?;
+        format!(
+            "image and tag could not be turned into regex pattern; {}, err: {}",
+            pattern_str, err
+        )
+    })?;
     Ok(pattern)
 }
 
@@ -68,6 +80,9 @@ mod tests {
     #[test]
     fn image_tag_to_re_test() {
         let pattern = image_tag_to_re("namespace/image", "1.2.4-alpha", "AS build").unwrap();
-        assert_eq!(pattern.as_str(), r"[^\n\r]FROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build[\n\r$]");
+        assert_eq!(
+            pattern.as_str(),
+            r"[^\n\r]FROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build[\n\r$]"
+        );
     }
 }

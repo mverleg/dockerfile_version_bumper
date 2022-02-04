@@ -19,23 +19,20 @@ fn updated_dockerfiles_content(
     //TODO @mark: what if multiple updates to same Dockerfile?
     let mut files: IndexMap<PathBuf, String> = IndexMap::new();
     for (parent, new_tag) in latest_tags.iter() {
+        dbg!(&parent);  //TODO @mark: TEMPORARY! REMOVE THIS!
         let content: &mut String = files
             .entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
         let image_pattern =
             image_tag_to_re(parent.image_name(), parent.tag().name(), parent.suffix())?;
-        dbg!(&image_pattern); //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(&content); //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(&image_pattern);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(&content);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        let new_image = format!("FROM {}:{} {}", parent.image_name(), new_tag, parent.suffix());
+        dbg!(&new_image);  //TODO @mark: TEMPORARY! REMOVE THIS!
         debug_assert!(
             image_pattern.is_match(content),
             "did not find image tag in dockerfile"
         );
-        let new_image = format!("FROM {}:{} {}", parent.image_name(), new_tag, parent.suffix());
-        dbg!(&new_image);
-        let intermediate = image_pattern   //TODO @mark: TEMPORARY! REMOVE THIS!
-            .replace_all(content, &new_image)   //TODO @mark: TEMPORARY! REMOVE THIS!
-            .into_owned();   //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(intermediate);  //TODO @mark: TEMPORARY! REMOVE THIS!
         *content = image_pattern
             .replace_all(content, new_image)
             .into_owned();
@@ -87,7 +84,6 @@ mod tests {
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
         ]).unwrap();
-        dbg!(&tags);  //TODO @mark: TEMPORARY! REMOVE THIS!
         assert_eq!(
             tags,
             indexmap![
@@ -115,7 +111,7 @@ mod tests {
             path1.clone(),
             format!(
                 "FROM {}:{} AS build\n\
-                    {}:{}\n",
+                    FROM {}:{}\n",
                 &image1, &tag1_str, &image2, &tag2_str
             ),
         ));
@@ -132,10 +128,10 @@ mod tests {
             tag_old1.clone(),
             "AS build".to_owned(),
         );
-        let parent_a2 = Parent::new(dockerfile_a, image1, tag2_pattern, tag_old2, "".to_owned());
+        let parent_a2 = Parent::new(dockerfile_a, image2, tag2_pattern, tag_old2, "".to_owned());
         let parent_b1 = Parent::new(
             dockerfile_b,
-            "namespace/image2".to_owned(),
+            "namespace/image".to_owned(),
             tag1_pattern,
             tag_old1,
             "AS pre".to_owned(),
@@ -190,7 +186,7 @@ mod tests {
             tags,
             indexmap![
                 path => format!("FROM namespace/image:{} AS build\nRUN echo 'Using \
-                    namespace/image:{} AS build\n", &tag_new, &tag_str),
+                    namespace/image:{} AS build'\n", &tag_new, &tag_str),
             ]
         );
     }

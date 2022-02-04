@@ -35,7 +35,7 @@ pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
 pub(crate) fn image_tag_to_re(image: &str, tag: &str, suffix: &str) -> Result<Regex, String> {
     let tag_digits_replaced = tag_re_str(tag);
     let pattern_str = format!(
-        r"\bFROM\s+{}:{}\s+{}\b",
+        r"\bFROM\s+{}:{}\b(\s*{}\b)?",
         escape_re(image),
         tag_digits_replaced,
         escape_re(suffix)

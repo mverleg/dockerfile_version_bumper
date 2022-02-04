@@ -14,7 +14,7 @@ use crate::Parent;
 use super::data::Dockerfile;
 
 lazy_static! {
-    static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*(.*)$").unwrap();
+    static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*?( ?.*)$").unwrap();
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {

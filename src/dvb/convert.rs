@@ -12,7 +12,6 @@ pub(crate) fn escape_re(pattern: &str) -> String {
     pattern
         .replace('-', r"\-")
         .replace('.', r"\.")
-        .replace('/', r"\/")
 }
 
 fn tag_re_str(tag_str: &str) -> String {
@@ -82,7 +81,7 @@ mod tests {
         let pattern = image_tag_to_re("namespace/image", "1.2.4-alpha", "AS build").unwrap();
         assert_eq!(
             pattern.as_str(),
-            r"[^\n\r]FROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build[\n\r$]"
+            r"\bFROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build\b"
         );
     }
 }

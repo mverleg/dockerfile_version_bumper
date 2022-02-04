@@ -43,11 +43,20 @@ mod tests {
     use ::std::rc::Rc;
 
     use ::indexmap::indexmap;
+    use regex::Regex;
 
     use crate::dvb::convert::{parse_tag, tag_to_re};
     use crate::dvb::data::Dockerfile;
 
     use super::*;
+
+    #[test]
+    fn re_replace() {
+        let res = image_tag_to_re("namespace/image", "1.2.8-alpha", "AS build").unwrap()
+            .replace_all("FROM  namespace/image:1.2.8-alpha  AS build\n",
+                         "FROM namespace/image:1.3.2-alpha AS build".to_owned());
+        assert_eq!("FROM namespace/image:1.3.2-alpha AS build\n", res);
+    }
 
     #[test]
     fn single() {

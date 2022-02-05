@@ -1,6 +1,7 @@
 use ::std::path::PathBuf;
 use std::fs::write;
 
+use ::derive_new::new;
 use ::indexmap::IndexMap;
 use ::log::debug;
 
@@ -16,13 +17,26 @@ pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>, dry_run
         }
         return Ok(());
     }
-    for (pth, content) in new_content {
-        //TODO @mark: async
+    write_dockerfiles(new_content)
+}
+
+async fn write_dockerfiles(path_contents: &IndexMap<PathBuf, String>) -> Result<(), String> {
+    let mut futures = vec![];
+    for (pth, content) in path_contents {
         debug!("writing updated Dockerfile to '{}'", pth.to_string_lossy());
         write(pth, content)
             .map_err(|err| format!("failed to write updated Dockerfile: {}", err))?;
     }
-    Ok(())
+    let mut futures = vec![];
+    for path in dockerfiles {
+        futures.push(read_dockerfile(path));
+    }
+    Ok(try_join_all(futures).await?.into_iter()
+        .map(|df| Rc::new(df))
+        .collect::<Vec<_>>())
+}
+
+Ok(())
 }
 
 fn updated_dockerfiles_content(

@@ -1,5 +1,4 @@
 use ::std::collections::HashSet;
-use ::std::fs::read_to_string;
 use ::std::path::Path;
 use ::std::path::PathBuf;
 use ::std::rc::Rc;
@@ -7,6 +6,8 @@ use ::std::rc::Rc;
 use ::lazy_static::lazy_static;
 use ::log::{info, warn};
 use ::regex::Regex;
+use ::tokio::fs::read_to_string;
+use ::futures::future::try_join_all;
 
 use crate::dvb::convert::{parse_tag, tag_to_re};
 use crate::Parent;
@@ -18,16 +19,18 @@ lazy_static! {
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {
-    //TODO @mark: async
-    dockerfiles
-        .iter()
-        .map(|path| read_dockerfile(path.as_path()).map(Rc::new))
-        .collect::<Result<Vec<_>, _>>()
+    let mut futures = vec![];
+    for path in dockerfiles {
+        futures.push(read_dockerfile(path));
+    }
+    Ok(try_join_all(futures).await?.into_iter()
+        .map(|df| Rc::new(df))
+        .collect::<Vec<_>>())
 }
 
-fn read_dockerfile(path: &Path) -> Result<Dockerfile, String> {
+async fn read_dockerfile(path: &Path) -> Result<Dockerfile, String> {
     info!("reading dockerfile: {}", path.to_string_lossy());
-    match read_to_string(path) {
+    match read_to_string(path).await {
         Ok(content) => Ok(Dockerfile::new(path.to_path_buf(), content)),
         Err(err) => Err(format!(
             "Could not read Dockerfile '{}'.\n\

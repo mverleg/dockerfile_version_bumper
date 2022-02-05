@@ -22,19 +22,11 @@ pub async fn find_latest_tag(
 ) -> Result<IndexMap<Parent, Tag>, String> {
     let client = Client::new();
 
-    let latest_tags = stream::iter(parents.into_iter().map(|parent| {
-        (
-            format!(
-                "https://registry.hub.docker.com/v1/repositories/{}/tags",
-                &parent.image_name()
-            ),
-            parent,
-        )
-    }))
-    .map(|(url, parent)| load_filter_tags(parent, &client, url, bump_major))
-    .buffer_unordered(8)
-    .try_collect::<Vec<_>>()
-    .await?;
+    let latest_tags = stream::iter(parents.into_iter().map(url_for_parent))
+        .map(|(url, parent)| load_filter_tags(parent, &client, url, bump_major))
+        .buffer_unordered(8)
+        .try_collect::<Vec<_>>()
+        .await?;
 
     Ok(latest_tags
         .into_iter()
@@ -45,6 +37,16 @@ pub async fn find_latest_tag(
                 .then(parent1.image_name().cmp(parent2.image_name()))
         })
         .collect::<IndexMap<Parent, Tag>>())
+}
+
+fn url_for_parent(parent: Parent) -> (String, Parent) {
+    return (
+        format!(
+            "https://registry.hub.docker.com/v1/repositories/{}/tags",
+            &parent.image_name()
+        ),
+        parent,
+    );
 }
 
 async fn load_filter_tags(
@@ -65,9 +67,7 @@ fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, St
         .map(|tag| parse_tag(parent.tag_pattern(), &tag[1]).unwrap())
         .filter(|tag| tag >= parent.tag())
         .filter(|tag| bump_major || tag.major() == parent.tag().major())
-        //.inspect(|tag| debug!("tag = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
         .sorted()
-        //.inspect(|tag| debug!("CHOSEN = {}", tag))  //TODO @mark: TEMPORARY! REMOVE THIS!
         .rev()
         .next()
         .ok_or_else(|| {

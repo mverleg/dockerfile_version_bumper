@@ -11,7 +11,6 @@ use ::regex::Regex;
 
 #[derive(Debug, Getters, new)]
 pub struct Dockerfile {
-    #[allow(dead_code)] //TODO @mark: TEMPORARY! REMOVE THIS!
     path: PathBuf,
     content: String,
 }

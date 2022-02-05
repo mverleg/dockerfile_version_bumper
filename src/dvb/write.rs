@@ -1,16 +1,24 @@
 use ::std::path::PathBuf;
 
 use ::indexmap::IndexMap;
+use ::log::debug;
 
 use crate::dvb::convert::image_tag_to_re;
 use crate::dvb::data::Tag;
 use crate::Parent;
 
-pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>) -> Result<(), String> {
-    let new_content = updated_dockerfiles_content(latest_tags);
-    // fs::write(parent.dockerfile().path(), content)
-    //     .map_err(|_| format!("failed to update Dockerfile '{}'", parent.name()))?
-    unimplemented!() //TODO @mark: TEMPORARY! REMOVE THIS!
+pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>, dry_run: bool) -> Result<(), String> {
+    let new_content = updated_dockerfiles_content(latest_tags)?;
+    if dry_run {
+        for (pth, content) in new_content {
+            debug!("new content for {}\n{}", pth.to_string_lossy(), content);
+        }
+        return Ok(());
+    }
+    for (pth, content) in new_content {
+
+    }
+    Ok(())
 }
 
 fn updated_dockerfiles_content(

@@ -1,23 +1,30 @@
 use ::std::path::PathBuf;
-use std::task::Poll;
+use ::std::task::Poll;
 
 use ::futures::future::poll_fn;
 use ::futures::future::try_join_all;
+use ::futures::FutureExt;
 use ::futures::TryFutureExt;
 use ::indexmap::IndexMap;
 use ::log::debug;
 use ::tokio::fs::write;
-use futures::FutureExt;
 
 use crate::dvb::convert::image_tag_to_re;
 use crate::dvb::data::Tag;
 use crate::Parent;
 
-pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>, dry_run: bool) -> Result<(), String> {
+pub async fn update_all_dockerfiles(
+    latest_tags: &IndexMap<Parent, Tag>,
+    dry_run: bool,
+) -> Result<(), String> {
     let new_content = updated_dockerfiles_content(latest_tags)?;
     if dry_run {
         for (pth, content) in new_content {
-            debug!("If this were not running in dry-mode, the Dockerfile '{}' would become:\n{}", pth.to_string_lossy(), content);
+            debug!(
+                "If this were not running in dry-mode, the Dockerfile '{}' would become:\n{}",
+                pth.to_string_lossy(),
+                content
+            );
         }
         return Ok(());
     }
@@ -30,12 +37,15 @@ async fn write_dockerfiles(path_contents: &IndexMap<PathBuf, String>) -> Result<
         let future = poll_fn(|_| {
             debug!("writing updated Dockerfile to '{}'", pth.to_string_lossy());
             Poll::Ready(())
-        }).then(move |_| write(pth, content)
-            .map_err(|err| format!("failed to write updated Dockerfile: {}", err)));
+        })
+        .then(move |_| {
+            write(pth, content)
+                .map_err(|err| format!("failed to write updated Dockerfile: {}", err))
+        });
         futures.push(future);
     }
-    Ok(try_join_all(futures).await?.into_iter()
-        .collect::<()>())
+    try_join_all(futures).await?;
+    Ok(())
 }
 
 fn updated_dockerfiles_content(
@@ -48,14 +58,17 @@ fn updated_dockerfiles_content(
             .or_insert_with(|| parent.dockerfile().content().to_owned());
         let image_pattern =
             image_tag_to_re(parent.image_name(), parent.tag().name(), parent.suffix())?;
-        let new_image = format!("FROM {}:{}{}", parent.image_name(), new_tag, parent.suffix());
+        let new_image = format!(
+            "FROM {}:{}{}",
+            parent.image_name(),
+            new_tag,
+            parent.suffix()
+        );
         debug_assert!(
             image_pattern.is_match(content),
             "did not find image tag in dockerfile"
         );
-        *content = image_pattern
-            .replace_all(content, new_image)
-            .into_owned();
+        *content = image_pattern.replace_all(content, new_image).into_owned();
     }
     Ok(files)
 }
@@ -73,9 +86,12 @@ mod tests {
 
     #[test]
     fn re_replace() {
-        let res = image_tag_to_re("namespace/image", "1.2.8-alpha", " AS build").unwrap()
-            .replace_all("FROM  namespace/image:1.2.8-alpha  AS build\n",
-                         "FROM namespace/image:1.3.2-alpha AS build".to_owned());
+        let res = image_tag_to_re("namespace/image", "1.2.8-alpha", " AS build")
+            .unwrap()
+            .replace_all(
+                "FROM  namespace/image:1.2.8-alpha  AS build\n",
+                "FROM namespace/image:1.3.2-alpha AS build".to_owned(),
+            );
         assert_eq!("FROM namespace/image:1.3.2-alpha AS build\n", res);
     }
 
@@ -102,7 +118,8 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
-        ]).unwrap();
+        ])
+        .unwrap();
         assert_eq!(
             tags,
             indexmap![
@@ -143,7 +160,7 @@ mod tests {
 
         let parent_a1 = Parent::new(
             dockerfile_a.clone(),
-            image1.clone(),
+            image1,
             tag1_pattern.clone(),
             tag_old1.clone(),
             " AS build".to_owned(),
@@ -159,9 +176,10 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent_a1 => tag_new1.clone(),
-            parent_a2 => tag_new2.clone(),
-            parent_b1 => tag_new1.clone(),
-        ]).unwrap();
+            parent_a2 => tag_new2,
+            parent_b1 => tag_new1,
+        ])
+        .unwrap();
         assert_eq!(tags.len(), 2);
         assert_eq!(tags[&path1], "FROM namespace/image:1.3.2-alpha AS build\nFROM namespace/image2:0.4.4-rc1\nRUN echo done");
         assert_eq!(tags[&path2], "FROM namespace/image:1.3.2-alpha AS pre\n");
@@ -194,7 +212,8 @@ mod tests {
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
-        ]).unwrap();
+        ])
+        .unwrap();
         assert_eq!(
             tags,
             indexmap![

@@ -3,11 +3,11 @@ use ::std::path::Path;
 use ::std::path::PathBuf;
 use ::std::rc::Rc;
 
+use ::futures::future::try_join_all;
 use ::lazy_static::lazy_static;
 use ::log::{info, warn};
 use ::regex::Regex;
 use ::tokio::fs::read_to_string;
-use ::futures::future::try_join_all;
 
 use crate::dvb::convert::{parse_tag, tag_to_re};
 use crate::Parent;
@@ -23,8 +23,10 @@ pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dock
     for path in dockerfiles {
         futures.push(read_dockerfile(path));
     }
-    Ok(try_join_all(futures).await?.into_iter()
-        .map(|df| Rc::new(df))
+    Ok(try_join_all(futures)
+        .await?
+        .into_iter()
+        .map(Rc::new)
         .collect::<Vec<_>>())
 }
 
@@ -59,8 +61,11 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
             let tag_str = &matches[2];
             let tag_pattern = tag_to_re(tag_str)?;
             let tag = parse_tag(&tag_pattern, tag_str)?;
-            let suffix = matches.get(3).map(|s| s.as_str())
-                .unwrap_or_else(|| "").to_owned();
+            let suffix = matches
+                .get(3)
+                .map(|s| s.as_str())
+                .unwrap_or_else(|| "")
+                .to_owned();
             Ok(Some(Parent::new(
                 dockerfile,
                 name,

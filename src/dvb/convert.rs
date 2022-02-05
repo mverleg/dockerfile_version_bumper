@@ -9,9 +9,7 @@ lazy_static! {
 }
 
 pub(crate) fn escape_re(pattern: &str) -> String {
-    pattern
-        .replace('-', r"\-")
-        .replace('.', r"\.")
+    pattern.replace('-', r"\-").replace('.', r"\.")
 }
 
 fn tag_re_str(tag_str: &str) -> String {

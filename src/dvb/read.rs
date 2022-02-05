@@ -14,7 +14,7 @@ use crate::Parent;
 use super::data::Dockerfile;
 
 lazy_static! {
-    static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*?( ?.*)$").unwrap();
+    static ref FROM_RE: Regex = Regex::new(r"^FROM\s+(\S+):(\S+)\s*( .*)?$").unwrap();
 }
 
 pub async fn read_all_dockerfiles(dockerfiles: &[PathBuf]) -> Result<Vec<Rc<Dockerfile>>, String> {
@@ -56,7 +56,8 @@ fn parse_line_from(dockerfile: Rc<Dockerfile>, line: &str) -> Result<Option<Pare
             let tag_str = &matches[2];
             let tag_pattern = tag_to_re(tag_str)?;
             let tag = parse_tag(&tag_pattern, tag_str)?;
-            let suffix = matches[3].to_owned();
+            let suffix = matches.get(3).map(|s| s.as_str())
+                .unwrap_or_else(|| "").to_owned();
             Ok(Some(Parent::new(
                 dockerfile,
                 name,

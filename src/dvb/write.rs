@@ -16,19 +16,14 @@ pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>) -> Resu
 fn updated_dockerfiles_content(
     latest_tags: &IndexMap<Parent, Tag>,
 ) -> Result<IndexMap<PathBuf, String>, String> {
-    //TODO @mark: what if multiple updates to same Dockerfile?
     let mut files: IndexMap<PathBuf, String> = IndexMap::new();
     for (parent, new_tag) in latest_tags.iter() {
-        dbg!(&parent);  //TODO @mark: TEMPORARY! REMOVE THIS!
         let content: &mut String = files
             .entry(parent.dockerfile().path().to_owned())
             .or_insert_with(|| parent.dockerfile().content().to_owned());
         let image_pattern =
             image_tag_to_re(parent.image_name(), parent.tag().name(), parent.suffix())?;
-        dbg!(&image_pattern);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(&content);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        let new_image = format!("FROM {}:{} {}", parent.image_name(), new_tag, parent.suffix());
-        dbg!(&new_image);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        let new_image = format!("FROM {}:{}{}", parent.image_name(), new_tag, parent.suffix());
         debug_assert!(
             image_pattern.is_match(content),
             "did not find image tag in dockerfile"
@@ -45,7 +40,6 @@ mod tests {
     use ::std::rc::Rc;
 
     use ::indexmap::indexmap;
-    use regex::Regex;
 
     use crate::dvb::convert::{parse_tag, tag_to_re};
     use crate::dvb::data::Dockerfile;
@@ -143,14 +137,9 @@ mod tests {
             parent_b1 => tag_new1.clone(),
         ])
         .unwrap();
-        assert_eq!(
-            tags,
-            indexmap![
-                path1 => format!("FROM namespace/image:{} AS build\n\
-                        namespace/image2:{}\n", &tag_new1, &tag_new2),
-                path2 => format!("FROM namespace/image:{} AS build\n", &tag_new2),
-            ]
-        );
+        assert_eq!(tags.len(), 2);
+        assert_eq!(tags[&path1], format!("FROM namespace/image:{} AS build\nFROM namespace/image2:{}\n", &tag_new1, &tag_new2));
+        assert_eq!(tags[&path2], format!("FROM namespace/image:{} AS build\n", &tag_new2));
     }
 
     #[test]

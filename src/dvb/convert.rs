@@ -81,7 +81,7 @@ mod tests {
         let pattern = image_tag_to_re("namespace/image", "1.2.4-alpha", "AS build").unwrap();
         assert_eq!(
             pattern.as_str(),
-            r"\bFROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\s+AS build\b"
+            r"\bFROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\b(\s*AS build\b)?"
         );
     }
 }

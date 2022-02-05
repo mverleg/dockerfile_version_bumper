@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn re_replace() {
-        let res = image_tag_to_re("namespace/image", "1.2.8-alpha", "AS build").unwrap()
+        let res = image_tag_to_re("namespace/image", "1.2.8-alpha", " AS build").unwrap()
             .replace_all("FROM  namespace/image:1.2.8-alpha  AS build\n",
                          "FROM namespace/image:1.3.2-alpha AS build".to_owned());
         assert_eq!("FROM namespace/image:1.3.2-alpha AS build\n", res);
@@ -72,7 +72,7 @@ mod tests {
             image,
             tag_pattern,
             tag_old,
-            "AS build".to_owned(),
+            " AS build".to_owned(),
         );
 
         let tags = updated_dockerfiles_content(&indexmap![
@@ -105,7 +105,8 @@ mod tests {
             path1.clone(),
             format!(
                 "FROM {}:{} AS build\n\
-                    FROM {}:{}\n",
+                    FROM {}:{}\n\
+                    RUN echo done",
                 &image1, &tag1_str, &image2, &tag2_str
             ),
         ));
@@ -120,7 +121,7 @@ mod tests {
             image1.clone(),
             tag1_pattern.clone(),
             tag_old1.clone(),
-            "AS build".to_owned(),
+            " AS build".to_owned(),
         );
         let parent_a2 = Parent::new(dockerfile_a, image2, tag2_pattern, tag_old2, "".to_owned());
         let parent_b1 = Parent::new(
@@ -128,18 +129,17 @@ mod tests {
             "namespace/image".to_owned(),
             tag1_pattern,
             tag_old1,
-            "AS pre".to_owned(),
+            " AS pre".to_owned(),
         );
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent_a1 => tag_new1.clone(),
             parent_a2 => tag_new2.clone(),
             parent_b1 => tag_new1.clone(),
-        ])
-        .unwrap();
+        ]).unwrap();
         assert_eq!(tags.len(), 2);
-        assert_eq!(tags[&path1], format!("FROM namespace/image:{} AS build\nFROM namespace/image2:{}\n", &tag_new1, &tag_new2));
-        assert_eq!(tags[&path2], format!("FROM namespace/image:{} AS build\n", &tag_new2));
+        assert_eq!(tags[&path1], "FROM namespace/image:1.3.2-alpha AS build\nFROM namespace/image2:0.4.4-rc1\nRUN echo done");
+        assert_eq!(tags[&path2], "FROM namespace/image:1.3.2-alpha AS pre\n");
     }
 
     #[test]
@@ -151,7 +151,7 @@ mod tests {
             path.clone(),
             format!(
                 "FROM {}:{} AS build\n\
-            RUN echo 'Using {}:{} AS build'\n",
+            RUN echo 'Using {}:{} AS build '\n",
                 &image, &tag_str, &image, &tag_str
             ),
         ));
@@ -164,18 +164,17 @@ mod tests {
             image,
             tag_pattern,
             tag_old,
-            "AS build".to_owned(),
+            " AS build".to_owned(),
         );
 
         let tags = updated_dockerfiles_content(&indexmap![
             parent => tag_new.clone(),
-        ])
-        .unwrap();
+        ]).unwrap();
         assert_eq!(
             tags,
             indexmap![
-                path => format!("FROM namespace/image:{} AS build\nRUN echo 'Using \
-                    namespace/image:{} AS build'\n", &tag_new, &tag_str),
+                path => format!("FROM namespace/image:{} AS build\nRUN echo \
+                'Using namespace/image:{} AS build '\n", &tag_new, &tag_str),
             ]
         );
     }

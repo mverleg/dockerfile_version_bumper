@@ -35,7 +35,7 @@ pub(crate) fn tag_to_re(tag_str: &str) -> Result<Regex, String> {
 pub(crate) fn image_tag_to_re(image: &str, tag: &str, suffix: &str) -> Result<Regex, String> {
     let tag_digits_replaced = tag_re_str(tag);
     let pattern_str = format!(
-        r"\bFROM\s+{}:{}\b(\s*{}\b)?",
+        r"(?m)^FROM\s+{}:{}\b(\s*{})?$",
         escape_re(image),
         tag_digits_replaced,
         escape_re(suffix)
@@ -81,7 +81,7 @@ mod tests {
         let pattern = image_tag_to_re("namespace/image", "1.2.4-alpha", "AS build").unwrap();
         assert_eq!(
             pattern.as_str(),
-            r"\bFROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\b(\s*AS build\b)?"
+            r"(?m)^FROM\s+namespace/image:([0-9]+)\.([0-9]+)\.([0-9]+)\-alpha\b(\s*AS build)?$"
         );
     }
 }

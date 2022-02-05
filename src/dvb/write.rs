@@ -1,9 +1,13 @@
 use ::std::path::PathBuf;
-use std::fs::write;
+use std::task::Poll;
 
-use ::derive_new::new;
+use ::futures::future::poll_fn;
+use ::futures::future::try_join_all;
+use ::futures::TryFutureExt;
 use ::indexmap::IndexMap;
 use ::log::debug;
+use ::tokio::fs::write;
+use futures::FutureExt;
 
 use crate::dvb::convert::image_tag_to_re;
 use crate::dvb::data::Tag;
@@ -17,26 +21,21 @@ pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>, dry_run
         }
         return Ok(());
     }
-    write_dockerfiles(new_content)
+    write_dockerfiles(&new_content).await
 }
 
 async fn write_dockerfiles(path_contents: &IndexMap<PathBuf, String>) -> Result<(), String> {
     let mut futures = vec![];
     for (pth, content) in path_contents {
-        debug!("writing updated Dockerfile to '{}'", pth.to_string_lossy());
-        write(pth, content)
-            .map_err(|err| format!("failed to write updated Dockerfile: {}", err))?;
-    }
-    let mut futures = vec![];
-    for path in dockerfiles {
-        futures.push(read_dockerfile(path));
+        let future = poll_fn(|_| {
+            debug!("writing updated Dockerfile to '{}'", pth.to_string_lossy());
+            Poll::Ready(())
+        }).then(move |_| write(pth, content)
+            .map_err(|err| format!("failed to write updated Dockerfile: {}", err)));
+        futures.push(future);
     }
     Ok(try_join_all(futures).await?.into_iter()
-        .map(|df| Rc::new(df))
-        .collect::<Vec<_>>())
-}
-
-Ok(())
+        .collect::<()>())
 }
 
 fn updated_dockerfiles_content(

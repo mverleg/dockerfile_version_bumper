@@ -19,11 +19,6 @@ pub async fn bump_dockerfiles(
     bump_major: bool,
     dry_run: bool,
 ) -> Result<Vec<TagUp>, String> {
-    assert!(
-        bump_major,
-        "bumping only minor versions not implemented, use --major"
-    );
-    assert!(dry_run, "in-place update not implemented, use --dry-run");
     let dockerfiles = read_all_dockerfiles(dockerfiles).await?;
     let all_parents = extract_parents(&dockerfiles)?;
     let parents = filter_parents(all_parents, allow_parents)?;

@@ -1,4 +1,5 @@
 use ::std::path::PathBuf;
+use std::fs::write;
 
 use ::indexmap::IndexMap;
 use ::log::debug;
@@ -11,12 +12,15 @@ pub async fn update_all_dockerfiles(latest_tags: &IndexMap<Parent, Tag>, dry_run
     let new_content = updated_dockerfiles_content(latest_tags)?;
     if dry_run {
         for (pth, content) in new_content {
-            debug!("new content for {}\n{}", pth.to_string_lossy(), content);
+            debug!("If this were not running in dry-mode, the Dockerfile '{}' would become:\n{}", pth.to_string_lossy(), content);
         }
         return Ok(());
     }
     for (pth, content) in new_content {
-
+        //TODO @mark: async
+        debug!("writing updated Dockerfile to '{}'", pth.to_string_lossy());
+        write(pth, content)
+            .map_err(|err| format!("failed to write updated Dockerfile: {}", err))?;
     }
     Ok(())
 }

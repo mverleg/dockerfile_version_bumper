@@ -40,6 +40,31 @@ jobs:
           echo "next (soon to be current) version: v$NEXT_VER"
           echo ::set-output name=next_version::"$NEXT_VER"
 
+  create_release:
+    name: Create Github release
+    needs: next_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: v${{ needs.next_version.outputs.next_version }}"
+          tag_name: ${{ github.ref }}
+          #body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload readme to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: README.md
+          asset_name: README.md
+
   binary_matrix:
     name: Make matrix
     needs: next_version
@@ -67,7 +92,7 @@ jobs:
 
   binary:
     name: Release binaries
-    needs: binary_matrix
+    needs: [binary_matrix, create_release]
     runs-on: ubuntu-latest
     if: needs.binary_matrix.outputs.do_artifact == 1
     strategy:

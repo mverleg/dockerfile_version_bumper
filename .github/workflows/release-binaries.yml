@@ -39,6 +39,17 @@ jobs:
           NEXT_VER="$(curl -f https://next.tryin.top/${{ github.event.inputs.bump }}/${{ steps.prev_ver.outputs.previous_version }})"
           echo "next (soon to be current) version: v$NEXT_VER"
           echo ::set-output name=next_version::"$NEXT_VER"
+      - name: Bump Cargo.toml
+        run: |
+          sed -Ei 's/^version\s+=\s+"[^"]*"/version = "${{ steps.next_ver.outputs.next_version }}"/' Cargo.toml
+      - name: Check
+        run: |
+          cargo check
+      - name: Commit & tag
+          run: |
+            echo
+      #- name: Commit
+        #TODO @mark: should commit, tag & push on main (if version number is to be in main branch)
 
   create_release:
     name: Create Github release
@@ -54,7 +65,7 @@ jobs:
           draft: false
           prerelease: false
           release_name: v${{ needs.next_version.outputs.next_version }}"
-          tag_name: ${{ github.ref }}
+          tag_name: v${{ needs.next_version.outputs.next_version }}"
           #body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}

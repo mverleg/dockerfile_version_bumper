@@ -18,7 +18,7 @@ path = "src/lib.rs"
 jemalloc = ["jemallocator"]
 
 [dependencies]
-log = "0.4.14"
+log = "0.4.16"
 env_logger = "0.9.0"
 structopt = "0.3.26"
 regex = "1.5.5"
@@ -29,7 +29,7 @@ futures = "0.3.21"
 derive-getters = "0.2.0"
 derive-new = "0.5.9"
 itertools = "0.10.3"
-indexmap = "1.8.0"
+indexmap = "1.8.1"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = { version = "0.3.2", optional = true }

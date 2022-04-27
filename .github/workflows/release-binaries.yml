@@ -51,8 +51,8 @@ jobs:
       - name: Commit & tag
         id: commit
         run: |
-          MSG1="Bumped ${{ github.event.inputs.bump }} to ${{ steps.next_ver.outputs.next_version }} from v${{ steps.prev_ver.outputs.previous_version }}."
-          MSG2="Auto-bump by Github Actions workflow ${{ github.workflow }} job ${{ github.job }} run ${{ github.run_id }}"
+          MSG1="Bumped ${{ github.event.inputs.bump }} to v${{ steps.next_ver.outputs.next_version }} from v${{ steps.prev_ver.outputs.previous_version }}."
+          MSG2="Auto-bump by Github Actions workflow '${{ github.workflow }}' job '${{ github.job }}' run '${{ github.run_id }}' triggered by '${{ github.event_name }}/${{ github.event.action }}'."
           echo "$MSG1\n$MSG2"
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
@@ -61,8 +61,6 @@ jobs:
           git tag -a v${{ steps.next_ver.outputs.next_version }} -m "$MSG1" -m "$MSG2"
           git push && git push --tags
           echo ::set-output name=bump_ref::"$(git rev-parse --short HEAD)"
-      #- name: Commit
-        #TODO @mark: should commit, tag & push on main (if version number is to be in main branch)
 
   create_release:
     name: Create Github release
@@ -81,6 +79,7 @@ jobs:
           prerelease: false
           release_name: v${{ needs.next_version.outputs.next_version }}
           tag_name: v${{ needs.next_version.outputs.next_version }}
+          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ steps.next_ver.outputs.next_version }} from ${{ steps.prev_ver.outputs.previous_version }} on $(date --utc +'%Y-%m-%d')."
           #body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}

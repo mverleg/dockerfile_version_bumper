@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
       - name: Get current version
         id: prev_ver
         run: |
@@ -46,8 +48,16 @@ jobs:
         run: |
           cargo check
       - name: Commit & tag
-          run: |
-            echo
+        run: |
+          MSG1="Bumped ${{ github.event.inputs.bump }} to ${{ steps.next_ver.outputs.next_version }} from v${{ steps.prev_ver.outputs.previous_version }}."
+          MSG2="Auto-bump by Github Actions workflow ${{ github.workflow }} job ${{ github.job }} run ${{ github.run_id }}"
+          echo "$MSG1\n$MSG2"
+          git config user.name 'Mark release bot'
+          git config user.email 'mverleg.noreply@gmail.com'
+          git add :/ --all
+          git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
+          git tag -a v${{ steps.next_ver.outputs.next_version }} -m "$MSG1" -m "$MSG2"
+          git push && git push --tags
       #- name: Commit
         #TODO @mark: should commit, tag & push on main (if version number is to be in main branch)
 

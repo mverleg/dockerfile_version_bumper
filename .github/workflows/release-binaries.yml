@@ -75,6 +75,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: README.md
           asset_name: README.md
+          tag: ${{ github.ref }}
 
   binary_matrix:
     name: Make matrix

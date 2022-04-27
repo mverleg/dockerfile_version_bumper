@@ -21,6 +21,7 @@ jobs:
     outputs:
       previous_version: ${{ steps.prev_ver.outputs.previous_version }}
       next_version: ${{ steps.next_ver.outputs.next_version }}
+      bump_ref: ${{ steps.commit.outputs.bump_ref }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,6 +49,7 @@ jobs:
         run: |
           cargo check
       - name: Commit & tag
+        id: commit
         run: |
           MSG1="Bumped ${{ github.event.inputs.bump }} to ${{ steps.next_ver.outputs.next_version }} from v${{ steps.prev_ver.outputs.previous_version }}."
           MSG2="Auto-bump by Github Actions workflow ${{ github.workflow }} job ${{ github.job }} run ${{ github.run_id }}"
@@ -58,6 +60,7 @@ jobs:
           git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
           git tag -a v${{ steps.next_ver.outputs.next_version }} -m "$MSG1" -m "$MSG2"
           git push && git push --tags
+          echo ::set-output name=bump_ref::"$(git rev-parse --short HEAD)"
       #- name: Commit
         #TODO @mark: should commit, tag & push on main (if version number is to be in main branch)
 
@@ -68,14 +71,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: release
         uses: actions/create-release@v1
         id: create_release
         with:
           draft: false
           prerelease: false
-          release_name: v${{ needs.next_version.outputs.next_version }}"
-          tag_name: v${{ needs.next_version.outputs.next_version }}"
+          release_name: v${{ needs.next_version.outputs.next_version }}
+          tag_name: v${{ needs.next_version.outputs.next_version }}
           #body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -97,6 +102,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: Check conditions
         id: conf
         run: |
@@ -127,6 +134,8 @@ jobs:
           echo asset_postfix=${{ matrix.asset_postfix }}
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: Build project
         run: |
           cat ./ci/release.Dockerfile

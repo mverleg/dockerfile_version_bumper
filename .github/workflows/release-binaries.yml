@@ -115,7 +115,7 @@ jobs:
         if: steps.conf.outputs.do_artifact == 1
         run: |
           mat="$(jq .release.artifact -r ci-conf.json | jq '.targets[] + (.bins[] | {"bin": .})' | jq -sc '{"include":.}')"
-          echo $mat
+          echo $mat | jq
           echo ::set-output name=bin_targets::"$mat"
 
   binary:

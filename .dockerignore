@@ -3,4 +3,3 @@
 !Cargo.lock
 !src/
 !deny.toml
-!upgrade_docker_base.sh

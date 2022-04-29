@@ -31,7 +31,7 @@ jobs:
         id: prev_ver
         run: |
           set -x
-          PREV_VER="$(git tag --list | grep -E '^v[0-9]' | sort --version-sort --field-separator=.)"
+          PREV_VER="$(git tag --list | grep -E '^v[0-9]' | sort --reverse --version-sort --field-separator=. | head -n1)"
           echo "current (soon to be previous) version: v$PREV_VER"
           echo ::set-output name=previous_version::"$PREV_VER"
       - name: Get next version
@@ -89,7 +89,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: README.md
           asset_name: README.md
-          tag: ${{ github.ref }}
+          tag: v${{ needs.next_version.outputs.next_version }}
 
   binary_matrix:
     name: Make matrix
@@ -148,3 +148,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.bin }}
           asset_name: ${{ matrix.bin }}-${{ matrix.asset_postfix }}
+          tag: v${{ needs.next_version.outputs.next_version }}

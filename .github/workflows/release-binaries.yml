@@ -24,7 +24,7 @@ jobs:
       bump_ref: ${{ steps.commit.outputs.bump_ref }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
       - name: Get current version
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: release
@@ -100,7 +100,7 @@ jobs:
       do_artifact: ${{ steps.conf.outputs.do_artifact }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: Check conditions
@@ -132,7 +132,7 @@ jobs:
           echo target=${{ matrix.target }}
           echo asset_postfix=${{ matrix.asset_postfix }}
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.bump_ref }}
       - name: Build project

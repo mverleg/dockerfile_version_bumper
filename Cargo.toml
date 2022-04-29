@@ -1,6 +1,6 @@
 [package]
 name = "dockerfile_version_bumper"
-version = "0.1.0"
+version = "0.1.1"
 description = "Simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version."
 edition = "2021"
 publish = true

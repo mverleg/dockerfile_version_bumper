@@ -31,7 +31,7 @@ jobs:
         id: prev_ver
         run: |
           set -x
-          PREV_VER="$(cargo metadata --no-deps --all-features --format-version=1 | jq -r .packages[].version)"
+          PREV_VER="$(git tag --list | grep -E '^v[0-9]' | sort --version-sort --field-separator=.)"
           echo "current (soon to be previous) version: v$PREV_VER"
           echo ::set-output name=previous_version::"$PREV_VER"
       - name: Get next version

@@ -60,7 +60,7 @@ jobs:
           git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
           git tag -a v${{ steps.next_ver.outputs.next_version }} -m "$MSG1" -m "$MSG2"
           git push && git push --tags
-          echo ::set-output name=bump_ref::"$(git rev-parse --short HEAD)"
+          echo ::set-output name=bump_ref::"$(git rev-parse HEAD)"
 
   create_release:
     name: Create Github release

@@ -50,6 +50,7 @@ jobs:
           cargo check
       - name: Update readme
         run: |
+          cargo build
           python3 - <<EOF
           import re
           from subprocess import check_output
@@ -161,10 +162,11 @@ jobs:
           docker build --build-arg BIN="${{ matrix.bin }}" --build-arg TARGET="${{ matrix.target }}" -t release-image -f ./ci/release.Dockerfile .
           id=$(docker create release-image)
           docker cp "$id:/${{ matrix.bin }}" "${{ matrix.bin }}"
+          if ! [ -f "${{ matrix.bin }}" ]; then exit 1; fi
       - name: Upload binary to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.bin }}
+          file: ${{ matrix.bin }}
           asset_name: ${{ matrix.bin }}-${{ matrix.asset_postfix }}
           tag: v${{ needs.next_version.outputs.next_version }}

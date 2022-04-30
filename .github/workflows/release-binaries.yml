@@ -50,19 +50,23 @@ jobs:
           cargo check
       - name: Update readme
         run: |
-          #TODO @mark: 
-          echo 'update --help in readme'
-python3 - <<EOF
-import re
-from subprocess import check_output
-cli_help = check_output(['cargo', 'run', '--', '--help']).decode('utf-8')
-with open('README.md', 'r') as f:
-  readme = f.read()
-parts = re.split('\`\`\`cli_help.*?\`\`\`', readme)
-readme = cli_help.join(parts)
-with open('README.md', 'w') as f:
-  f.write(readme)
-EOF
+          python3 - <<EOF
+          import re
+          from subprocess import check_output
+          with open('README.md', 'r') as f:
+              readme = f.read()
+          cli_help_re = '\`\`\`cli_help.*?\`\`\`'
+          parts = re.compile(cli_help_re, re.DOTALL).split(readme)
+          if len(parts) > 1:
+              print('updating readme')
+              cli_help = check_output(['cargo', 'run', '--', '--help']).decode('utf-8')
+              cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
+              with open('README.md', 'w') as f:
+                  f.write(cli_help.join(parts))
+          else:
+              print('not updating readme, no cli_help section')
+          EOF
+          cat README.md
       - name: Commit & tag
         id: commit
         run: |

@@ -99,7 +99,7 @@ jobs:
           prerelease: false
           release_name: v${{ needs.next_version.outputs.next_version }}
           tag_name: v${{ needs.next_version.outputs.next_version }}
-          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ steps.next_ver.outputs.next_version }} from ${{ steps.prev_ver.outputs.previous_version }} on $(date --utc +'%Y-%m-%d')."
+          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ needs.next_version.outputs.next_version }} from ${{ needs.next_version.outputs.next_version }}."
           #body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -140,7 +140,7 @@ jobs:
 
   binary:
     name: Release binaries
-    needs: [binary_matrix, create_release]
+    needs: [next_version, binary_matrix, create_release]
     runs-on: ubuntu-latest
     if: needs.binary_matrix.outputs.do_artifact == 1
     strategy:

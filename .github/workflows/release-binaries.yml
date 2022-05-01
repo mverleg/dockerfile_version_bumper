@@ -82,50 +82,7 @@ jobs:
           git push && git push --tags
           echo ::set-output name=bump_ref::"$(git rev-parse HEAD)"
 
-  create_release:
-    name: Create Github release
-    needs: next_version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ needs.next_version.outputs.bump_ref }}
-      - name: release
-        uses: actions/create-release@v1
-        id: create_release
-        with:
-          draft: false
-          prerelease: false
-          release_name: v${{ needs.next_version.outputs.next_version }}
-          tag_name: v${{ needs.next_version.outputs.next_version }}
-          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ needs.next_version.outputs.next_version }} from ${{ needs.next_version.outputs.next_version }}."
-          #body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload readme to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: README.md
-          asset_name: README.md
-          tag: v${{ needs.next_version.outputs.next_version }}
-      - name: Create metadata
-        run: |
-          printf '%s\n%s\n%s\n' \
-            "${{ needs.next_version.outputs.next_version }}" \
-            "${{ needs.next_version.outputs.bump_ref }}" \
-            "$(date -u +%s)" \
-              > INFO
-      - name: Upload metadata to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: INFO
-          asset_name: INFO
-          tag: v${{ needs.next_version.outputs.next_version }}
-
-  binary_matrix:
+  create_matrix:
     name: Make matrix
     needs: next_version
     runs-on: ubuntu-latest
@@ -152,13 +109,13 @@ jobs:
           echo $mat | jq
           echo ::set-output name=bin_targets::"$mat"
 
-  binary:
-    name: Release binaries
-    needs: [next_version, binary_matrix, create_release]
+  build_matrix:
+    name: Build binaries
+    needs: [next_version, create_matrix, create_release]
     runs-on: ubuntu-latest
-    if: needs.binary_matrix.outputs.do_artifact == 1
+    if: needs.create_matrix.outputs.do_artifact == 1
     strategy:
-      matrix: ${{ fromJson(needs.binary_matrix.outputs.bin_targets) }}
+      matrix: ${{ fromJson(needs.create_matrix.outputs.bin_targets) }}
     steps:
       - name: Log matrix
         run: |
@@ -175,8 +132,75 @@ jobs:
           set -x
           docker build --build-arg BIN="${{ matrix.bin }}" --build-arg TARGET="${{ matrix.target }}" -t release-image -f ./ci/release.Dockerfile .
           id=$(docker create release-image)
-          docker cp "$id:/${{ matrix.bin }}" "${{ matrix.bin }}"
+          docker cp "$id:/${{ matrix.bin }}" "${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}"
           if ! [ -f "${{ matrix.bin }}" ]; then exit 1; fi
+      - name: Store binary
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}
+          path: ${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}
+
+  create_release:
+    name: Create Github release
+    needs: next_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.next_version.outputs.bump_ref }}
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: v${{ needs.next_version.outputs.next_version }}
+          tag_name: v${{ needs.next_version.outputs.next_version }}
+          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ needs.next_version.outputs.next_version }} from ${{ needs.next_version.outputs.next_version }}."
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload readme to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: README.md
+          asset_name: README.md
+          tag: v${{ needs.next_version.outputs.next_version }}
+      - name: Create metadata
+        run: |
+          printf '%s\n%s\n%s\n' \
+            "${{ needs.next_version.outputs.next_version }}" \
+            "${{ needs.next_version.outputs.bump_ref }}" \
+            "$(date -u +%s)" \
+              > INFO
+      - name: Upload metadata to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: INFO
+          asset_name: INFO
+          tag: v${{ needs.next_version.outputs.next_version }}
+  # #TODO @mark: version, hash, date
+
+  attach_matrix:
+    name: Attach binaries
+    needs: [next_version, create_matrix, create_release]
+    runs-on: ubuntu-latest
+    if: needs.create_matrix.outputs.do_artifact == 1
+    strategy:
+      matrix: ${{ fromJson(needs.create_matrix.outputs.bin_targets) }}
+    steps:
+      - name: Log matrix
+        run: |
+          echo bin=${{ matrix.bin }}
+          echo target=${{ matrix.target }}
+          echo asset_postfix=${{ matrix.asset_postfix }}
+      - name: Retrieve binary
+        uses: actions/download-artifact@master
+        with:
+          name: ${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}
+          path: ${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}
       - name: Upload binary to release
         uses: svenstaro/upload-release-action@v1-release
         with:

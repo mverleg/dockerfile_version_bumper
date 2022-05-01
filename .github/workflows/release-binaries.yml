@@ -168,7 +168,7 @@ jobs:
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
-          git checkout "${{ steps.next_ver.outputs.branch }}"
+          git checkout "${{ steps.next_version.outputs.branch }}"
           git cherry-pick "${{ needs.next_version.outputs.bump_draft_ref }}"
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"

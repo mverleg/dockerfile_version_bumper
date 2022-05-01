@@ -110,6 +110,20 @@ jobs:
           file: README.md
           asset_name: README.md
           tag: v${{ needs.next_version.outputs.next_version }}
+      - name: Create metadata
+        run: |
+          printf '%s\n%s\n%s\n' \
+            "${{ needs.next_version.outputs.next_version }}" \
+            "${{ needs.next_version.outputs.bump_ref }}" \
+            "$(date -u +%s)" \
+              > INFO
+      - name: Upload metadata to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: INFO
+          asset_name: INFO
+          tag: v${{ needs.next_version.outputs.next_version }}
 
   binary_matrix:
     name: Make matrix

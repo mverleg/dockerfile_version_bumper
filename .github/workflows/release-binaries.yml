@@ -21,7 +21,7 @@ jobs:
     outputs:
       previous_version: ${{ steps.prev_ver.outputs.previous_version }}
       next_version: ${{ steps.next_ver.outputs.next_version }}
-      bump_ref: ${{ steps.commit.outputs.bump_ref }}
+      bump_detached_ref: ${{ steps.commit.outputs.bump_detached_ref }}
       branch: ${{ steps.commit.outputs.branch }}
     steps:
       - name: Checkout code
@@ -80,8 +80,7 @@ jobs:
           git checkout "$(git rev-parse HEAD)"
           git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
           git push
-          echo ::set-output name=bump_ref::"$(git rev-parse HEAD)"
-    #TODO @mark: currently release commit is on main branch, but maybe it should be dangling?
+          echo ::set-output name=bump_detached_ref::"$(git rev-parse HEAD)"
 
   create_matrix:
     name: Make matrix
@@ -94,7 +93,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.next_version.outputs.bump_ref }}
+          ref: ${{ needs.next_version.outputs.bump_detached_ref }}
       - name: Check conditions
         id: conf
         run: |
@@ -130,7 +129,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.next_version.outputs.bump_ref }}
+          ref: ${{ needs.next_version.outputs.bump_detached_ref }}
       - name: Build project
         run: |
           cat ./ci/release.Dockerfile
@@ -150,22 +149,25 @@ jobs:
     # include `matrix_compile` in neees to prevent creating release if build fails
     needs: [next_version, matrix_compile]
     runs-on: ubuntu-latest
+    outputs:
+      bump_main_ref: ${{ steps.commit.outputs.bump_main_ref }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.next_version.outputs.bump_ref }}
+          ref: ${{ needs.next_version.outputs.bump_detached_ref }}
       - name: Git tag
+        id: tag
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
           git checkout "${{ steps.next_ver.outputs.branch }}"
-          git cherry-pick "${{ needs.next_version.outputs.bump_ref }}"
+          git cherry-pick "${{ needs.next_version.outputs.bump_detached_ref }}"
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"
           git tag -a v${{ steps.next_ver.outputs.next_version }} -F "$cmt_mgs_pth"
           git push --tags
-      #TODO @mark: make all subsequent steps use the new commit hash
+          echo ::set-output name=bump_main_ref::"$(git rev-parse HEAD)"
       - name: release
         uses: actions/create-release@v1
         id: create_release
@@ -186,9 +188,10 @@ jobs:
           tag: v${{ needs.next_version.outputs.next_version }}
       - name: Create metadata
         run: |
+          set -ux
           printf '%s\n%s\n%s\n' \
             "${{ needs.next_version.outputs.next_version }}" \
-            "${{ needs.next_version.outputs.bump_ref }}" \
+            "${{ steps.tag.outputs.bump_main_ref }}" \
             "$(date -u +%s)" \
               > INFO
       - name: Upload metadata to release

@@ -45,9 +45,6 @@ jobs:
       - name: Bump Cargo.toml
         run: |
           sed -Ei 's/^version\s+=\s+"[^"]*"/version = "${{ steps.next_ver.outputs.next_version }}"/' Cargo.toml
-      - name: Check
-        run: |
-          cargo check
       - name: Update readme
         run: |
           cargo build

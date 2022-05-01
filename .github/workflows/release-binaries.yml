@@ -162,13 +162,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.next_version.outputs.bump_draft_ref }}
+          ref: ${{ needs.next_version.outputs.branch }}
       - name: Git tag
         id: tag
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
-          git checkout "${{ needs.next_version.outputs.branch }}"
           git cherry-pick "${{ needs.next_version.outputs.bump_draft_ref }}"
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"

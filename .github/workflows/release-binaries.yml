@@ -22,6 +22,7 @@ jobs:
       previous_version: ${{ steps.prev_ver.outputs.previous_version }}
       next_version: ${{ steps.next_ver.outputs.next_version }}
       bump_ref: ${{ steps.commit.outputs.bump_ref }}
+      branch: ${{ steps.commit.outputs.branch }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -65,7 +66,7 @@ jobs:
               print('not updating readme, no cli_help section')
           EOF
           cat README.md
-      - name: Commit & tag
+      - name: Detached commit
         id: commit
         run: |
           MSG1="Bumped ${{ github.event.inputs.bump }} to v${{ steps.next_ver.outputs.next_version }} from v${{ steps.prev_ver.outputs.previous_version }}."
@@ -74,9 +75,11 @@ jobs:
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git add :/ --all
+          echo 'Create detached head for now, to keep this commit out of main'
+          echo ::set-output name=branch::"$(git rev-parse --abbrev-ref HEAD)"
+          git checkout "$(git rev-parse HEAD)"
           git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
-          git tag -a v${{ steps.next_ver.outputs.next_version }} -m "$MSG1" -m "$MSG2"
-          git push && git push --tags
+          git push
           echo ::set-output name=bump_ref::"$(git rev-parse HEAD)"
     #TODO @mark: currently release commit is on main branch, but maybe it should be dangling?
 
@@ -135,7 +138,7 @@ jobs:
           docker build --build-arg BIN="${{ matrix.bin }}" --build-arg TARGET="${{ matrix.target }}" -t release-image -f ./ci/release.Dockerfile .
           id=$(docker create release-image)
           docker cp "$id:/${{ matrix.bin }}" "${{ matrix.asset_name }}"
-          if ! [ -f "${{ matrix.bin }}" ]; then exit 1; fi
+          if ! [ -f "${{ matrix.asset_name }}" ]; then exit 1; fi
       - name: Store binary
         uses: actions/upload-artifact@master
         with:
@@ -152,6 +155,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.bump_ref }}
+      - name: Git tag
+        run: |
+          echo "Move the bump commit to the main branch and tag it"
+          set -x
+          git checkout "${{ steps.next_ver.outputs.branch }}"
+          git cherry-pick "${{ needs.next_version.outputs.bump_ref }}"
+          cmt_mgs_pth="$(mktemp)"
+          git log --format=%B -n 1 > "$cmt_mgs_pth"
+          git tag -a v${{ steps.next_ver.outputs.next_version }} -F "$cmt_mgs_pth"
+          git push --tags
+      #TODO @mark: make all subsequent steps use the new commit hash
       - name: release
         uses: actions/create-release@v1
         id: create_release

@@ -168,5 +168,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ matrix.bin }}
-          asset_name: ${{ matrix.bin }}-${{ matrix.asset_postfix }}
+          asset_name: ${{ matrix.bin }}-v${{ needs.next_version.outputs.next_version }}-${{ matrix.asset_postfix }}
           tag: v${{ needs.next_version.outputs.next_version }}

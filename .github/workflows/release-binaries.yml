@@ -109,9 +109,9 @@ jobs:
           echo $mat | jq
           echo ::set-output name=bin_targets::"$mat"
 
-  build_matrix:
+  matrix_compile:
     name: Build binaries
-    needs: [next_version, create_matrix, create_release]
+    needs: [next_version, create_matrix]
     runs-on: ubuntu-latest
     if: needs.create_matrix.outputs.do_artifact == 1
     strategy:
@@ -142,7 +142,8 @@ jobs:
 
   create_release:
     name: Create Github release
-    needs: next_version
+    # include `matrix_compile` in neees to prevent creating release if build fails
+    needs: [next_version, matrix_compile]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -181,11 +182,10 @@ jobs:
           file: INFO
           asset_name: INFO
           tag: v${{ needs.next_version.outputs.next_version }}
-  # #TODO @mark: version, hash, date
 
-  attach_matrix:
+  matrix_attach:
     name: Attach binaries
-    needs: [next_version, create_matrix, create_release]
+    needs: [next_version, create_matrix, create_release, matrix_compile]
     runs-on: ubuntu-latest
     if: needs.create_matrix.outputs.do_artifact == 1
     strategy:

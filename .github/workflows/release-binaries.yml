@@ -172,6 +172,7 @@ jobs:
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"
+          git branch -D release-workflow || true
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"
           git tag -a v${{ needs.next_version.outputs.next_version }} -F "$cmt_mgs_pth"
@@ -186,7 +187,7 @@ jobs:
           prerelease: false
           release_name: v${{ needs.next_version.outputs.next_version }}
           tag_name: v${{ needs.next_version.outputs.next_version }}
-          body: "Bumped ${{ github.event.inputs.bump }} version from ${{ needs.next_version.outputs.next_version }} to ${{ needs.next_version.outputs.next_version }}."
+          body: "Bumped ${{ github.event.inputs.bump }} version from ${{ needs.next_version.outputs.previous_version }} to ${{ needs.next_version.outputs.next_version }}."
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Upload readme to release

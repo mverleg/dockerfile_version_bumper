@@ -16,14 +16,14 @@ COPY ./ ./
 # Build (for release)
 RUN find . -name target -prune -o -type f &&\
     touch -c build.rs src/main.rs src/lib.rs &&\
-    cargo build --bin "$BIN" --target "$TARGET" --release --locked
+    cargo build --bin "$BIN" --target "$TARGET" --release --offline
 
 # Copy executable
 RUN find . -wholename "*/target/*" -name "$BIN" -type f -executable -print -exec cp {} /"$BIN" \; &&\
     test -f /"$BIN"
 
 # Create CLI_HELP.txt
-RUN cargo build --bin "$BIN" --target "$TARGET" --release --locked -- --help | tee CLI_HELP.txt &&\
+RUN cargo build --bin "$BIN" --target "$TARGET" --release --offline -- --help | tee CLI_HELP.txt &&\
     cp CLI_HELP.txt /CLI_HELP.txt
 
 

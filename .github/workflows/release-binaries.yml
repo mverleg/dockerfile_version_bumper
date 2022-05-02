@@ -48,27 +48,6 @@ jobs:
       - name: Bump Cargo.toml
         run: |
           sed -Ei 's/^version\s+=\s+"[^"]*"/version = "${{ steps.next_ver.outputs.next_version }}"/' Cargo.toml
-      - name: Update readme
-        run: |
-          set -x
-          cargo build
-          python3 - <<EOF
-          import re
-          from subprocess import check_output
-          with open('README.md', 'r') as f:
-              readme = f.read()
-          cli_help_re = '\`\`\`cli_help.*?\`\`\`'
-          parts = re.compile(cli_help_re, re.DOTALL).split(readme)
-          if len(parts) > 1:
-              print('updating readme')
-              cli_help = check_output(['cargo', 'run', '--', '--help']).decode('utf-8')
-              cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
-              with open('README.md', 'w') as f:
-                  f.write(cli_help.join(parts))
-          else:
-              print('not updating readme, no cli_help section')
-          EOF
-          cat README.md
       - name: Commit on branch
         id: commit
         run: |
@@ -150,6 +129,32 @@ jobs:
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
+      - name: Update readme
+        run: |
+          set -x
+          cargo build
+          python3 - <<EOF
+          import re
+          from subprocess import check_output
+          with open('README.md', 'r') as f:
+              readme = f.read()
+          cli_help_re = '\`\`\`cli_help.*?\`\`\`'
+          parts = re.compile(cli_help_re, re.DOTALL).split(readme)
+          if len(parts) > 1:
+              print('updating readme')
+              cli_help = check_output(['cargo', 'run', '--', '--help']).decode('utf-8')
+              cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
+              with open('README.md', 'w') as f:
+                  f.write(cli_help.join(parts))
+          else:
+              print('not updating readme, no cli_help section')
+          EOF
+          cat README.md
+      - name: Store binary
+        uses: actions/upload-artifact@master
+        with:
+          name: README.md
+          path: README.md
 
   create_release:
     name: Create Github release
@@ -163,25 +168,39 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.branch }}
+      - name: Retrieve binary
+        uses: actions/download-artifact@master
+        with:
+          name: README.md
+          path: README.md
+      - name: Create metadata
+        run: |
+          set -ux
+          printf '%s\n%s\n%s\n' \
+            "${{ needs.next_version.outputs.next_version }}" \
+            "${{ steps.tag.outputs.bump_main_ref }}" \
+            "$(date -u +%s)" \
+              > INFO
       - name: Git tag
         id: tag
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
           git branch --show-current
-          git log -n3
+          git log -n3 --oneline
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"
           git branch -D release-workflow || true
+          git commit --amend --no-edit
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"
           git tag -a v${{ needs.next_version.outputs.next_version }} -F "$cmt_mgs_pth"
-          git log -n3
+          git log -n3 --oneline
           git push --tags
           git push origin --delete release-workflow
           echo ::set-output name=bump_main_ref::"$(git rev-parse HEAD)"
-      - name: release
+      - name: Create release
         uses: actions/create-release@v1
         id: create_release
         with:
@@ -199,20 +218,19 @@ jobs:
           file: README.md
           asset_name: README.md
           tag: v${{ needs.next_version.outputs.next_version }}
-      - name: Create metadata
-        run: |
-          set -ux
-          printf '%s\n%s\n%s\n' \
-            "${{ needs.next_version.outputs.next_version }}" \
-            "${{ steps.tag.outputs.bump_main_ref }}" \
-            "$(date -u +%s)" \
-              > INFO
       - name: Upload metadata to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: INFO
           asset_name: INFO
+          tag: v${{ needs.next_version.outputs.next_version }}
+      - name: Upload metadata to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: README.md
+          asset_name: README.md
           tag: v${{ needs.next_version.outputs.next_version }}
 
   matrix_attach:

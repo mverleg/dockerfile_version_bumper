@@ -186,7 +186,7 @@ jobs:
           prerelease: false
           release_name: v${{ needs.next_version.outputs.next_version }}
           tag_name: v${{ needs.next_version.outputs.next_version }}
-          body: "Bumped ${{ github.event.inputs.bump }} version to ${{ needs.next_version.outputs.next_version }} from ${{ needs.next_version.outputs.next_version }}."
+          body: "Bumped ${{ github.event.inputs.bump }} version from ${{ needs.next_version.outputs.next_version }} to ${{ needs.next_version.outputs.next_version }}."
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Upload readme to release

@@ -22,6 +22,11 @@ RUN find . -name target -prune -o -type f &&\
 RUN find . -wholename "*/target/*" -name "$BIN" -type f -executable -print -exec cp {} /"$BIN" \; &&\
     test -f /"$BIN"
 
+# Create CLI_HELP.txt
+RUN cargo build --bin "$BIN" --target "$TARGET" --release --locked -- --help | tee CLI_HELP.txt &&\
+    cp CLI_HELP.txt /CLI_HELP.txt
+
+
 # Second stage image to decrease size
 FROM scratch AS executable
 
@@ -33,6 +38,7 @@ ENV RUST_LOG='warn'
 WORKDIR /code
 
 COPY --from=build /"$BIN" /"$BIN"
+COPY --from=build /CLI_HELP.txt /CLI_HELP.txt
 
 ENTRYPOINT ["$BIN"]
 

@@ -123,38 +123,18 @@ jobs:
           docker build --build-arg BIN="${{ matrix.bin }}" --build-arg TARGET="${{ matrix.target }}" -t release-image -f ./ci/release.Dockerfile .
           id=$(docker create release-image)
           docker cp "$id:/${{ matrix.bin }}" "${{ matrix.asset_name }}"
+          docker cp "$id:/CLI_HELP.txt" "CLI_HELP.txt"
           if ! [ -f "${{ matrix.asset_name }}" ]; then exit 1; fi
       - name: Store binary
         uses: actions/upload-artifact@master
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
-      - name: Update readme
-        run: |
-          set -x
-          cargo build
-          python3 - <<EOF
-          import re
-          from subprocess import check_output
-          with open('README.md', 'r') as f:
-              readme = f.read()
-          cli_help_re = '\`\`\`cli_help.*?\`\`\`'
-          parts = re.compile(cli_help_re, re.DOTALL).split(readme)
-          if len(parts) > 1:
-              print('updating readme')
-              cli_help = check_output(['cargo', 'run', '--', '--help']).decode('utf-8')
-              cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
-              with open('README.md', 'w') as f:
-                  f.write(cli_help.join(parts))
-          else:
-              print('not updating readme, no cli_help section')
-          EOF
-          cat README.md
       - name: Store binary
         uses: actions/upload-artifact@master
         with:
-          name: README.md
-          path: README.md
+          name: CLI_HELP.txt
+          path: CLI_HELP.txt
 
   create_release:
     name: Create Github release
@@ -171,16 +151,30 @@ jobs:
       - name: Retrieve binary
         uses: actions/download-artifact@master
         with:
-          name: README.md
-          path: README.md
-      - name: Create metadata
+          name: CLI_HELP.txt
+          path: CLI_HELP.txt
+      - name: Update readme
         run: |
-          set -ux
-          printf '%s\n%s\n%s\n' \
-            "${{ needs.next_version.outputs.next_version }}" \
-            "${{ steps.tag.outputs.bump_main_ref }}" \
-            "$(date -u +%s)" \
-              > INFO
+          set -x
+          cargo build
+          python3 - <<EOF
+          import re
+          from subprocess import check_output
+          with open('README.md', 'r') as f:
+              readme = f.read()
+          cli_help_re = '\`\`\`cli_help.*?\`\`\`'
+          parts = re.compile(cli_help_re, re.DOTALL).split(readme)
+          if len(parts) > 1:
+              print('updating readme')
+              with open('CLI_HELP.txt', 'r') as f:
+                  cli_help = f.read()
+              cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
+              with open('README.md', 'w') as f:
+                  f.write(cli_help.join(parts))
+          else:
+              print('not updating readme, no cli_help section')
+          EOF
+          cat README.md
       - name: Git tag
         id: tag
         run: |
@@ -200,6 +194,14 @@ jobs:
           git push --tags
           git push origin --delete release-workflow
           echo ::set-output name=bump_main_ref::"$(git rev-parse HEAD)"
+      - name: Create metadata
+        run: |
+          set -ux
+          printf '%s\n%s\n%s\n' \
+            "${{ needs.next_version.outputs.next_version }}" \
+            "${{ steps.tag.outputs.bump_main_ref }}" \
+            "$(date -u +%s)" \
+              > INFO
       - name: Create release
         uses: actions/create-release@v1
         id: create_release
@@ -224,13 +226,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: INFO
           asset_name: INFO
-          tag: v${{ needs.next_version.outputs.next_version }}
-      - name: Upload metadata to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: README.md
-          asset_name: README.md
           tag: v${{ needs.next_version.outputs.next_version }}
 
   matrix_attach:

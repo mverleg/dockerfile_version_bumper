@@ -175,13 +175,18 @@ jobs:
               print('not updating readme, no cli_help section')
           EOF
           cat README.md
+      - name: Store binary
+        uses: actions/upload-artifact@master
+        with:
+          name: README.md
+          path: README.md
       - name: Git tag
         id: tag
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
           git branch --show-current
-          git log -n3 --oneline
+          git           log -n3 --oneline
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"
@@ -202,6 +207,11 @@ jobs:
             "${{ steps.tag.outputs.bump_main_ref }}" \
             "$(date -u +%s)" \
               > INFO
+      - name: Store binary
+        uses: actions/upload-artifact@master
+        with:
+          name: INFO
+          path: INFO
       - name: Create release
         uses: actions/create-release@v1
         id: create_release

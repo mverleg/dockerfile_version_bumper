@@ -231,6 +231,13 @@ jobs:
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
+      - name: Debug
+        run: |
+          #TODO @mark: 
+          ls -als
+          echo "matrix.asset_name: ${{ matrix.asset_name }}"
+          echo "matrix.asset_name: ${{ matrix.asset_name }}"
+          echo "needs.next_version.outputs.next_version: v${{ needs.next_version.outputs.next_version }}"
       - name: Upload binary to release
         uses: svenstaro/upload-release-action@v1-release
         with:

@@ -16,7 +16,7 @@ COPY ./ ./
 # Build (for release)
 RUN find . -name target -prune -o -type f &&\
     touch -c build.rs src/main.rs src/lib.rs &&\
-    cargo build --bin "$BIN" --target "$TARGET" --release --offline
+    cargo build --bin "$BIN" --target "$TARGET" --release
 
 # Copy executable
 RUN find . -wholename "*/target/*" -name "$BIN" -type f -executable -print -exec cp {} /"$BIN" \; &&\

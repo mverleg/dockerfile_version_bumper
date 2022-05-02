@@ -156,7 +156,6 @@ jobs:
       - name: Update readme
         run: |
           set -x
-          cargo build
           python3 - <<EOF
           import re
           from subprocess import check_output

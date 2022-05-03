@@ -149,7 +149,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.next_version.outputs.branch }}
-      - name: Update readme
+      - name: Debug 1
         run: |
           #TODO @mark: TEMPORARY! REMOVE THIS!
           set -x
@@ -183,6 +183,14 @@ jobs:
               print('not updating readme, no cli_help section')
           EOF
           cat README.md
+      - name: Debug 2
+        run: |
+          #TODO @mark: TEMPORARY! REMOVE THIS!
+          set -x
+          pwd
+          tree
+          git status
+          cat README.md
       - name: Store binary
         uses: actions/upload-artifact@master
         with:
@@ -199,8 +207,9 @@ jobs:
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"
-          git branch -D release-workflow || true
+          git add :/ --all
           git commit --amend --no-edit
+          git diff-tree --no-commit-id --name-only -r HEAD
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"
           git tag -a v${{ needs.next_version.outputs.next_version }} -F "$cmt_mgs_pth"

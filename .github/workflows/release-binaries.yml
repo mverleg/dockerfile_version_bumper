@@ -152,12 +152,16 @@ jobs:
       - name: Update readme
         run: |
           #TODO @mark: TEMPORARY! REMOVE THIS!
+          set -x
+          pwd
           tree
-      - name: Retrieve cli help
-        uses: actions/download-artifact@master
-        with:
-          name: CLI_HELP.txt
-          path: CLI_HELP.txt
+          git status
+          cat CLI_HELP.txt
+#      - name: Retrieve cli help
+#        uses: actions/download-artifact@master
+#        with:
+#          name: CLI_HELP.txt
+#          path: CLI_HELP.txt
       - name: Update readme
         run: |
           set -x

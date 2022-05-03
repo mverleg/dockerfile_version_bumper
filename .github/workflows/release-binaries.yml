@@ -123,7 +123,8 @@ jobs:
           docker build --build-arg BIN="${{ matrix.bin }}" --build-arg TARGET="${{ matrix.target }}" -t release-image -f ./ci/release.Dockerfile .
           id=$(docker create release-image)
           docker cp "$id:/${{ matrix.bin }}" "${{ matrix.asset_name }}"
-          docker cp "$id:/CLI_HELP.txt" "CLI_HELP.txt"
+          # #TODO @mark: can be simplified once entrypoint works
+          docker run --entrypoint=dockerfile_version_bumper release-image --help | tee CLI_HELP.txt
           if ! [ -f "${{ matrix.asset_name }}" ]; then exit 1; fi
       - name: Store binary
         uses: actions/upload-artifact@master

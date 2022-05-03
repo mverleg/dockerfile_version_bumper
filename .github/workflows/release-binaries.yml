@@ -57,11 +57,11 @@ jobs:
           echo "$MSG1\n$MSG2"
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
+          echo ::set-output name=branch::"$(git rev-parse --abbrev-ref HEAD)"
           git branch -D release-workflow || true
           git checkout -b release-workflow
           git add :/ --all
           echo 'Create special branch for now, to keep this commit out of main'
-          echo ::set-output name=branch::"$(git rev-parse --abbrev-ref HEAD)"
           git commit --allow-empty -m "Version ${{ steps.next_ver.outputs.next_version }}" -m "$MSG1" -m "$MSG2"
           git push --force origin release-workflow
           echo ::set-output name=bump_draft_ref::"$(git rev-parse HEAD)"

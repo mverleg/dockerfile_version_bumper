@@ -159,14 +159,14 @@ jobs:
           python3 - <<EOF
           import re
           from subprocess import check_output
+          with open('CLI_HELP.txt', 'r') as f:
+              cli_help = f.read()
           with open('README.md', 'r') as f:
               readme = f.read()
           cli_help_re = '\`\`\`cli_help.*?\`\`\`'
           parts = re.compile(cli_help_re, re.DOTALL).split(readme)
           if len(parts) > 1:
               print('updating readme')
-              with open('CLI_HELP.txt', 'r') as f:
-                  cli_help = f.read()
               cli_help = '\`\`\`cli_help\n{}\n\`\`\`'.format(cli_help.strip())
               with open('README.md', 'w') as f:
                   f.write(cli_help.join(parts))
@@ -185,7 +185,7 @@ jobs:
           echo "Move the bump commit to the main branch and tag it"
           set -x
           git branch --show-current
-          git           log -n3 --oneline
+          git log -n3 --oneline
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"

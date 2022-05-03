@@ -193,6 +193,7 @@ jobs:
         run: |
           echo "Move the bump commit to the main branch and tag it"
           set -x
+          git fetch --all
           git branch --show-current
           git log -n3 --oneline
           git config user.name 'Mark release bot'

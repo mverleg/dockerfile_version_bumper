@@ -96,6 +96,7 @@ jobs:
               jq '.targets[] + (.bins[] | {"bin": .})' |\
               jq ". + {asset_name: (.bin + \"-\" + \"$version_name\" + \"-\" + .target)}" |\
               jq -sc '{"include":.}')"
+          asset_list="$(jq -r '.include[] | .asset_name' <<< "$mat")"
           echo $mat | jq
           echo ::set-output name=bin_targets::"$mat"
 
@@ -139,7 +140,7 @@ jobs:
 
   create_release:
     name: Create Github release
-    # include `matrix_compile` in neees to prevent creating release if build fails
+    # include `matrix_compile` in `needs` to prevent creating a release if the build fails
     needs: [next_version, matrix_compile]
     runs-on: ubuntu-latest
     outputs:
@@ -157,11 +158,6 @@ jobs:
           tree
           git status
           cat CLI_HELP.txt
-#      - name: Retrieve cli help
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: CLI_HELP.txt
-#          path: CLI_HELP.txt
       - name: Update readme
         run: |
           set -x
@@ -191,6 +187,7 @@ jobs:
           tree
           git status
           cat README.md
+          echo "${{ needs.create_matrix.outputs.bin_targets }}"
       - name: Store readme
         uses: actions/upload-artifact@v2
         with:
@@ -230,6 +227,13 @@ jobs:
         with:
           name: INFO
           path: INFO
+      - name: List assets
+        id: list_assets
+        run: |
+          set -x
+          printf 'README.md\nINFO\n' | tee assets.txt
+          jq -r '.include[] | .asset_name' <<< "${{ needs.create_matrix.outputs.bin_targets }}" | tee -a assets.txt
+          echo ::set-output name=assets::"$(cat assets.txt)"
       - name: Retrieve all binaries
         uses: actions/download-artifact@v2
       - name: Debug
@@ -237,28 +241,9 @@ jobs:
           - set -x
             find .. -type f
             la -als
+            cat assets.txt
+            echo "${{ needs.create_matrix.outputs.bin_targets }}"
       - name: Create release
-        uses: actions/create-release@v1
-        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          draft: false
-          prerelease: false
-          release_name: v${{ needs.next_version.outputs.next_version }}
-          tag_name: v${{ needs.next_version.outputs.next_version }}
-          body: "Bumped ${{ github.event.inputs.bump }} version from ${{ needs.next_version.outputs.previous_version }} to ${{ needs.next_version.outputs.next_version }}."
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload readme to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: README.md
-          asset_name: README.md
-          tag: v${{ needs.next_version.outputs.next_version }}
-      - name: Upload metadata to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: INFO
-          asset_name: INFO
-          tag: v${{ needs.next_version.outputs.next_version }}
+          files: "${{ steps.list_assets.outputs.assets }}"

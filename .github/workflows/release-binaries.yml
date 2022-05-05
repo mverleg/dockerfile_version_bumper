@@ -127,12 +127,12 @@ jobs:
           docker run --entrypoint=dockerfile_version_bumper release-image --help | tee CLI_HELP.txt
           if ! [ -f "${{ matrix.asset_name }}" ]; then exit 1; fi
       - name: Store binary
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
       - name: Store binary
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: CLI_HELP.txt
           path: CLI_HELP.txt
@@ -158,7 +158,7 @@ jobs:
           git status
           cat CLI_HELP.txt
 #      - name: Retrieve cli help
-#        uses: actions/download-artifact@master
+#        uses: actions/download-artifact@v2
 #        with:
 #          name: CLI_HELP.txt
 #          path: CLI_HELP.txt
@@ -192,7 +192,7 @@ jobs:
           git status
           cat README.md
       - name: Store readme
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: README.md
           path: README.md
@@ -226,10 +226,17 @@ jobs:
             "$(date -u +%s)" \
               > INFO
       - name: Store info file
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: INFO
           path: INFO
+      - name: Retrieve all binaries
+        uses: actions/download-artifact@v2
+      - name: Debug
+        run: |
+          - set -x
+            find .. -type f
+            la -als
       - name: Create release
         uses: actions/create-release@v1
         id: create_release
@@ -254,36 +261,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: INFO
           asset_name: INFO
-          tag: v${{ needs.next_version.outputs.next_version }}
-
-  matrix_attach:
-    name: Attach binaries
-    needs: [next_version, create_matrix, create_release, matrix_compile]
-    runs-on: ubuntu-latest
-    if: needs.create_matrix.outputs.do_artifact == 1
-    strategy:
-      matrix: ${{ fromJson(needs.create_matrix.outputs.bin_targets) }}
-    steps:
-      - name: Log matrix
-        run: |
-          echo bin=${{ matrix.bin }}
-          echo target=${{ matrix.target }}
-          echo asset_name=${{ matrix.asset_name }}
-      - name: Retrieve binary
-        uses: actions/download-artifact@master
-        with:
-          name: ${{ matrix.asset_name }}
-          path: ${{ matrix.asset_name }}
-      - name: Debug
-        run: |
-          #TODO @mark: 
-          ls -als
-          echo "matrix.asset_name: ${{ matrix.asset_name }}"
-          echo "needs.next_version.outputs.next_version: v${{ needs.next_version.outputs.next_version }}"
-      - name: Upload binary to release
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.asset_name }}
-          asset_name: ${{ matrix.asset_name }}
           tag: v${{ needs.next_version.outputs.next_version }}

@@ -191,7 +191,7 @@ jobs:
           tree
           git status
           cat README.md
-      - name: Store binary
+      - name: Store readme
         uses: actions/upload-artifact@master
         with:
           name: README.md
@@ -225,7 +225,7 @@ jobs:
             "${{ steps.tag.outputs.bump_main_ref }}" \
             "$(date -u +%s)" \
               > INFO
-      - name: Store binary
+      - name: Store info file
         uses: actions/upload-artifact@master
         with:
           name: INFO

@@ -188,11 +188,6 @@ jobs:
           git status
           cat README.md
           echo "${{ needs.create_matrix.outputs.bin_targets }}"
-      - name: Store readme
-        uses: actions/upload-artifact@v2
-        with:
-          name: README.md
-          path: README.md
       - name: Git tag
         id: tag
         run: |
@@ -222,6 +217,14 @@ jobs:
             "${{ steps.tag.outputs.bump_main_ref }}" \
             "$(date -u +%s)" \
               > INFO
+          rm CLI_HELP.txt
+      - name: Retrieve all binaries
+        uses: actions/download-artifact@v2
+      - name: Store readme
+        uses: actions/upload-artifact@v2
+        with:
+          name: README.md
+          path: README.md
       - name: Store info file
         uses: actions/upload-artifact@v2
         with:
@@ -234,8 +237,6 @@ jobs:
           printf 'README.md\nINFO\n' | tee assets.txt
           jq -r '.include[] | .asset_name' <<< "${{ needs.create_matrix.outputs.bin_targets }}" | tee -a assets.txt
           echo ::set-output name=assets::"$(cat assets.txt)"
-      - name: Retrieve all binaries
-        uses: actions/download-artifact@v2
       - name: Debug
         run: |
           - set -x

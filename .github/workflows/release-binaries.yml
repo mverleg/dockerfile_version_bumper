@@ -249,4 +249,6 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: "v${{ needs.next_version.outputs.next_version }}"
           files: "${{ steps.list_assets.outputs.assets }}"
+          token: "${{ secrets.GITHUB_TOKEN }}"

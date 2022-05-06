@@ -236,14 +236,15 @@ jobs:
           set -x
           printf 'README.md\nINFO\n' | tee assets.txt
           jq -r '.include[] | .asset_name' <<< "${{ needs.create_matrix.outputs.bin_targets }}" | tee -a assets.txt
+          cat assets.txt
           echo ::set-output name=assets::"$(cat assets.txt)"
       - name: Debug
         run: |
-          - set -x
-            find .. -type f
-            la -als
-            cat assets.txt
-            echo "${{ needs.create_matrix.outputs.bin_targets }}"
+          set -x
+          find .. -type f
+          la -als
+          cat assets.txt
+          echo "${{ needs.create_matrix.outputs.bin_targets }}"
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:

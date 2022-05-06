@@ -35,7 +35,7 @@ jobs:
         run: |
           set -x
           git fetch --tags
-          PREV_VER="$({ printf 'v0.0.0\n'; git tag --list; } | grep -E '^v[0-9]' | cut -c2- | sort --reverse --version-sort --field-separator=. | head -n1)"
+          PREV_VER="$({ printf 'v0.0.0\n'; git tag --list; } | grep -E '^v[0-9]+\.[0-9]+\.[0-9]$' | cut -c2- | sort --reverse --version-sort --field-separator=. | head -n1)"
           echo "current (soon to be previous) version: v$PREV_VER"
           echo ::set-output name=previous_version::"$PREV_VER"
       - name: Get next version

@@ -3,7 +3,20 @@
 
 This is a simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version compatible version.
 
-## Command line
+## Usage
+
+You can [check the releases](https://github.com/mverleg/dockerfile_version_bumper/releases) to see if your platform is included.
+
+If you want to bump Dockerfile versions as part of your CI pipeline, you can use these commands:
+
+```shell
+# download the executable for your platform
+curl -s https://api.github.com/repos/mverleg/dockerfile_version_bumper/releases/latest |\
+    jq -r '.assets[].browser_download_url | select(. | contains("amd64"))' | head -n1
+
+````
+
+## CLI
 
 `dockerfile_version_bumper` is a small command-line executable that you can run locally or in a CI pipeline.
     

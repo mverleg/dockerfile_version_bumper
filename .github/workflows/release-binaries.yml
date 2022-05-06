@@ -242,7 +242,7 @@ jobs:
         run: |
           set -x
           find .. -type f
-          la -als
+          ls -als
           cat assets.txt
           echo "${{ needs.create_matrix.outputs.bin_targets }}"
       - name: Create release

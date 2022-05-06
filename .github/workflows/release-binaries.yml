@@ -221,6 +221,8 @@ jobs:
           rm CLI_HELP.txt
       - name: Retrieve all binaries
         uses: actions/download-artifact@v2
+        with:
+          path: .
       - name: Store readme
         uses: actions/upload-artifact@v2
         with:
@@ -242,6 +244,7 @@ jobs:
       - name: Debug
         run: |
           set -x
+          echo "${{ needs.create_matrix.outputs.bin_targets }}" | xargs -I{} sh -c 'ls -als {}'
           find .. -type f
           ls -als
           cat assets.txt
@@ -249,6 +252,6 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
           tag_name: "v${{ needs.next_version.outputs.next_version }}"
           files: "${{ steps.list_assets.outputs.assets }}"
-          token: "${{ secrets.GITHUB_TOKEN }}"

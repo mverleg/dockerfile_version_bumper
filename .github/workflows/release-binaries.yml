@@ -95,7 +95,7 @@ jobs:
           version_name="$(printf "v${{ needs.next_version.outputs.next_version }}" | sed 's/\./_/g')"
           mat="$(jq .release.artifact -r ci-conf.json |\
               jq '.targets[] + (.bins[] | {"bin": .})' |\
-              jq ". + {asset_name: (.bin + \"-\" + \"$version_name\" + \"-\" + .target)}" |\
+              jq ". + {asset_name: (.bin + \"-\" + \"$version_name\" + \"-\" + .asset_postfix)}" |\
               jq -sc '{"include":.}')"
           asset_list="$(jq -r '.include[] | .asset_name' <<< "$mat")"
           echo $mat | jq

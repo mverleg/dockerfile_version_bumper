@@ -246,6 +246,7 @@ jobs:
           echo '${{ needs.create_matrix.outputs.bin_targets }}'
           jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}' | tee -a assets.txt
           cat assets.txt
+          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'mv "{}" "release_assets/{}"'
           echo ::set-output name=assets::"$(cat assets.txt)"
       - name: Debug 3
         run: |
@@ -253,13 +254,14 @@ jobs:
           find .. -type f
           ls -als
           cat assets.txt
+          mkdir -p 'release_assets/'
           echo '${{ needs.create_matrix.outputs.bin_targets }}'
           echo '${{ steps.list_assets.outputs.assets }}'
           echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'ls -als {}'
+          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'mv "{}" "release_assets/{}"'
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           tag_name: "v${{ needs.next_version.outputs.next_version }}"
-          files: |
-            "${{ steps.list_assets.outputs.assets }}"
+          files: release_assets/*

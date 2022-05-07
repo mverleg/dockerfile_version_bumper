@@ -224,12 +224,14 @@ jobs:
       - name: Collect assets
         run: |
           set -x
+          tree
           mkdir -p 'release_assets'
           cp 'README.md' 'release_assets/README.md'
           cp 'INFO' 'release_assets/INFO'
           echo '${{ needs.create_matrix.outputs.bin_targets }}'
           while IFS= read -r asset; do
               echo "asset = $asset/*"
+              ls -als "$asset"
               cp "$asset/*" "release_assets/"
           done <<< "$(jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}')"
           ls -als 'release_assets'

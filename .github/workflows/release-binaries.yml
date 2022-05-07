@@ -232,7 +232,7 @@ jobs:
           while IFS= read -r asset; do
               echo "asset = $asset/*"
               ls -als "$asset"
-              cp "$asset/*" "release_assets/"
+              cp "$asset"/* "release_assets/"
           done <<< "$(jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}')"
           ls -als 'release_assets'
       - name: Create release

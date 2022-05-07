@@ -242,23 +242,15 @@ jobs:
         id: list_assets
         run: |
           set -x
-          printf 'README.md\nINFO\n' | tee assets.txt
+          mkdir -p 'release_assets'
+          cp 'README.md' 'release_assets/README.md'
+          cp 'INFO' 'release_assets/INFO'
           echo '${{ needs.create_matrix.outputs.bin_targets }}'
-          jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}' | tee -a assets.txt
-          cat assets.txt
-          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'mv "{}" "release_assets/{}"'
-          echo ::set-output name=assets::"$(cat assets.txt)"
-      - name: Debug 3
-        run: |
-          set -x
-          find .. -type f
-          ls -als
-          cat assets.txt
-          mkdir -p 'release_assets/'
-          echo '${{ needs.create_matrix.outputs.bin_targets }}'
-          echo '${{ steps.list_assets.outputs.assets }}'
-          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'ls -als {}'
-          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'mv "{}" "release_assets/{}"'
+          while IFS= read -r asset; do
+              echo "asset = $asset"
+              cp "$asset" "release_assets/$asset"
+          done <<< "$(jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}')"
+          ls -als 'release_assets'
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:

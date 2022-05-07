@@ -142,7 +142,7 @@ jobs:
   create_release:
     name: Create Github release
     # include `matrix_compile` in `needs` to prevent creating a release if the build fails
-    needs: [next_version, matrix_compile]
+    needs: [next_version, create_matrix, matrix_compile]
     runs-on: ubuntu-latest
     outputs:
       bump_main_ref: ${{ steps.commit.outputs.bump_main_ref }}
@@ -243,6 +243,7 @@ jobs:
         run: |
           set -x
           printf 'README.md\nINFO\n' | tee assets.txt
+          echo "${{ needs.create_matrix.outputs.bin_targets }}"
           jq -r '.include[] | .asset_name' <<< "${{ needs.create_matrix.outputs.bin_targets }}" | tee -a assets.txt
           cat assets.txt
           echo ::set-output name=assets::"$(cat assets.txt)"

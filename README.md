@@ -10,11 +10,15 @@ You can [check the releases](https://github.com/mverleg/dockerfile_version_bumpe
 If you want to bump Dockerfile versions as part of your CI pipeline, you can use these commands:
 
 ```shell
-# download the executable for your platform
+# download the executable and run it
 curl -s https://api.github.com/repos/mverleg/dockerfile_version_bumper/releases/latest |\
-    jq -r '.assets[].browser_download_url | select(. | contains("amd64"))' | head -n1
-
+    jq -r '.assets[].browser_download_url | select(. | contains("-x86-64"))' | head -n1 |\
+    xargs -I{} curl curl -o dockerfile_version_bumper '{}' &&\
+    chmod u+x dockerfile_version_bumper &&\
+    ./dockerfile_version_bumper -f Dockerfile
 ````
+
+You can change the platform (`x86-64` in the example), pin a specific version (latest in the example), or add any of the flags described below.
 
 ## CLI
 

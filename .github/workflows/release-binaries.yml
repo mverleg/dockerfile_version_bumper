@@ -243,8 +243,8 @@ jobs:
         run: |
           set -x
           printf 'README.md\nINFO\n' | tee assets.txt
-          echo "${{ needs.create_matrix.outputs.bin_targets }}"
-          jq -r '.include[] | .asset_name' <<< "${{ needs.create_matrix.outputs.bin_targets }}" | tee -a assets.txt
+          echo '${{ needs.create_matrix.outputs.bin_targets }}'
+          jq -r '.include[] | .asset_name' <<< '${{ needs.create_matrix.outputs.bin_targets }}' | tee -a assets.txt
           cat assets.txt
           echo ::set-output name=assets::"$(cat assets.txt)"
       - name: Debug 3
@@ -253,9 +253,9 @@ jobs:
           find .. -type f
           ls -als
           cat assets.txt
-          echo "${{ needs.create_matrix.outputs.bin_targets }}"
-          echo "${{ steps.list_assets.outputs.assets }}"
-          echo "${{ steps.list_assets.outputs.assets }}" | xargs -I{} sh -c 'ls -als {}'
+          echo '${{ needs.create_matrix.outputs.bin_targets }}'
+          echo '${{ steps.list_assets.outputs.assets }}'
+          echo '${{ steps.list_assets.outputs.assets }}' | xargs -I{} sh -c 'ls -als {}'
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:

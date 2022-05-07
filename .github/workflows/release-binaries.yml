@@ -195,18 +195,23 @@ jobs:
           echo "Move the bump commit to the main branch and tag it"
           set -x
           git fetch origin release-workflow
-          git branch --show-current
-          git log -n3 --oneline
+          git branch --show-current  #TODO @mark: 
+          git log -n3 --oneline   #TODO @mark: 
           git config user.name 'Mark release bot'
           git config user.email 'mverleg.noreply@gmail.com'
           git cherry-pick --keep-redundant-commits "${{ needs.next_version.outputs.bump_draft_ref }}"
+          git branch --show-current  #TODO @mark: 
+          git log -n3 --oneline   #TODO @mark: 
           git add :/ --all
           git commit --amend --no-edit
+          git branch --show-current  #TODO @mark: 
+          git log -n3 --oneline   #TODO @mark: 
           git diff-tree --no-commit-id --name-only -r HEAD
           cmt_mgs_pth="$(mktemp)"
           git log --format=%B -n 1 > "$cmt_mgs_pth"
           git tag -a v${{ needs.next_version.outputs.next_version }} -F "$cmt_mgs_pth"
-          git log -n3 --oneline
+          git branch --show-current  #TODO @mark: 
+          git log -n3 --oneline   #TODO @mark: 
           git push --tags
           git push origin --delete release-workflow
           echo ::set-output name=bump_main_ref::"$(git rev-parse HEAD)"
@@ -254,4 +259,5 @@ jobs:
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           tag_name: "v${{ needs.next_version.outputs.next_version }}"
-          files: "${{ steps.list_assets.outputs.assets }}"
+          files: |
+            "${{ steps.list_assets.outputs.assets }}"

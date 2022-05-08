@@ -11,9 +11,9 @@ If you want to bump Dockerfile versions as part of your CI pipeline, you can use
 
 ```shell
 # download the executable and run it
-dockerfile_version_bumper_url="$(curl -s https://api.github.com/repos/mverleg/dockerfile_version_bumper/releases/latest |\
+bumper_url="$(curl -s https://api.github.com/repos/mverleg/dockerfile_version_bumper/releases/latest |\
     jq -r '.assets[].browser_download_url | select(. | contains("-x86-64"))' | head -n1)"
-curl --silent --location --output dockerfile_version_bumper "$dockerfile_version_bumper_url"
+curl --silent --location --output dockerfile_version_bumper "$bumper_url"
 chmod u+x dockerfile_version_bumper
 ./dockerfile_version_bumper -f Dockerfile
 ````

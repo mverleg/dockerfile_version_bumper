@@ -19,6 +19,7 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
     name = "dockerfile_version_bumper",
     about = "Simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version."
 )]
+/// CLI arguments. Readme will be updated by release build.
 pub struct Args {
     #[structopt(
         long = "dockerfile",

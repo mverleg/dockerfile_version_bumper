@@ -2,9 +2,9 @@ use ::std::path::PathBuf;
 use ::std::process::exit;
 use ::std::time::SystemTime;
 
+use ::clap::StructOpt;
 use ::derive_getters::Getters;
 use ::env_logger;
-use ::structopt::StructOpt;
 use ::tokio;
 
 use ::dockerfile_version_bumper::bump_dockerfiles;
@@ -23,14 +23,14 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 pub struct Args {
     #[structopt(
         long = "dockerfile",
-        short = "f",
+        short = 'f',
         default_value = "Dockerfile",
         parse(from_os_str)
     )]
     dockerfiles: Vec<PathBuf>,
     #[structopt(
         long = "parent",
-        short = "p",
+        short = 'p',
         help = "Parent images (FROM lines) base names that should be bumped. If empty, bumps every image in the Dockerfile that is found in the registry."
     )]
     parents: Vec<String>,

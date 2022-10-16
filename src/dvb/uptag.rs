@@ -40,13 +40,13 @@ pub async fn find_latest_tag(
 }
 
 fn url_for_parent(parent: Parent) -> (String, Parent) {
-    return (
+    (
         format!(
             "https://registry.hub.docker.com/v1/repositories/{}/tags",
             &parent.image_name()
         ),
         parent,
-    );
+    )
 }
 
 async fn load_filter_tags(

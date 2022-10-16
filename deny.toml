@@ -1,9 +1,10 @@
 
+# GENERATED: This file is automatically updated by 'Bump dependencies', local changes will be overwritten!
+
 [advisories]
 vulnerability = "deny"
 unmaintained = "deny"
 notice = "deny"
-unsound = "deny"
 
 [bans]
 multiple-versions = "deny"
@@ -16,20 +17,22 @@ unknown-git = "deny"
 allow-git = []
 
 [licenses]
+unlicensed = "deny"
 allow-osi-fsf-free = "both"
 copyleft = "deny"
+# We want really high confidence when inferring licenses from text
 confidence-threshold = 0.95
 allow = [
     "Apache-2.0",
     "MIT",
+    "BSD-2-Clause",
+    "BSD-2-Clause-Patent",
     "CC0-1.0",
+    "Unicode-DFS-2016",
+    "copyright-by-mverleg",
 ]
 
-#TODO @mark: temporary
-[[licenses.clarify]]
-name = "encoding_rs"
-version = "*"
-expression = "(Apache-2.0 OR MIT) AND BSD-3-Clause"
-license-files = [
-    { path = "COPYRIGHT", hash = 0x39f8ad31 }
+exceptions = [
+    #{ allow = ["Zlib"], name = "tinyvec" },
 ]
+

@@ -20,12 +20,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: All changed files
-        id: files
-        if: github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
-        uses: jitterbit/get-changed-files@v1
+      - uses: nrwl/last-successful-commit-action@v1
+        id: last_successful_commit
         with:
-          format: 'json'
+          branch: main
+          workflow_id: 'check-dependencies.yml'
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Changed?
         id: is_changed
         run: |
@@ -34,6 +34,14 @@ jobs:
               echo "::set-output name=IS_CHANGED::1"
               exit 0
           fi
+          basecmt="${{ steps.last_successful_commit.outputs.commit_hash }}"
+          if [ -z "$basecmt" ] || ! git diff --quiet HEAD "$basecmt"
+          then
+              echo "RUN DEPENDENCY CHECK BECAUSE DETERMINING PREVIOUS SUCCESSFUL RUN FAILED" 1>&2
+              echo "::set-output name=IS_CHANGED::1"
+              exit 0
+          fi
+          git diff --name-only HEAD "$basecmt"
           readarray -t changed_files <<<"$(jq -r '.[]' <<<'${{ steps.files.outputs.all }}')"
           for changed_file in ${changed_files[@]}; do
               if expr "$changed_file" : ".*Dockerfile" || expr "$changed_file" : ".*Cargo\..*" ; then

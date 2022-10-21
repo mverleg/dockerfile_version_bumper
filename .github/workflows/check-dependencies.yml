@@ -41,15 +41,14 @@ jobs:
               echo "::set-output name=IS_CHANGED::1"
               exit 0
           fi
-          git diff --name-only HEAD "$basecmt"
-          readarray -t changed_files <<<"$(jq -r '.[]' <<<'${{ steps.files.outputs.all }}')"
-          for changed_file in ${changed_files[@]}; do
-              if expr "$changed_file" : ".*Dockerfile" || expr "$changed_file" : ".*Cargo\..*" ; then
+          while IFS= read -r changed_file
+          do
+              if expr "$changed_file" : ".*Dockerfile" || expr "$changed_file" : ".*Cargo\..*"
+              then
                   echo "RUN DEPENDENCY CHECK BECAUSE OF $changed_file"
                   echo "::set-output name=IS_CHANGED::1"
               fi
-          done
-
+          done <<< git diff --name-only HEAD "$basecmt"
       - name: Log
         if: ${{ steps.is_changed.outputs.IS_CHANGED == '1' }}
         run: |

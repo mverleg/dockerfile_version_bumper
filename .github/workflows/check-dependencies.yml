@@ -37,19 +37,24 @@ jobs:
               echo "::set-output name=IS_CHANGED::1"
               exit 0
           fi
+          echo "not a scheduled or manual run"
           basecmt="${{ steps.last_successful_commit.outputs.commit_hash }}"
+          echo "checking if previous run $basecmt can be found"
           if [ -z "$basecmt" ] || git diff --quiet --exit-code HEAD "$basecmt"
           then
               echo "RUN DEPENDENCY CHECK BECAUSE DETERMINING PREVIOUS SUCCESSFUL RUN FAILED (ref = '$basecmt')" 1>&2
               echo "::set-output name=IS_CHANGED::1"
               exit 0
           fi
+          echo "previous run found, checking differences since then"
           while IFS= read -r changed_file
           do
-              if [[ "$changed_file" =~ ".*Dockerfile$" ]] || [[ "$changed_file" =~ "Cargo\." ]]
+              if [[ "$changed_file" =~ .*Dockerfile$ ]] || [[ "$changed_file" =~ .*Cargo\..* ]]
               then
                   echo "RUN DEPENDENCY CHECK BECAUSE OF $changed_file"
                   echo "::set-output name=IS_CHANGED::1"
+              else
+                  echo "found changes in $changed_file but not recognized as a dependency file"
               fi
           done <<< "$(git diff --name-only HEAD "$basecmt")"
       - name: Log

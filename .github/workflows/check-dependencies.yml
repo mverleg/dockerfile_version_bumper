@@ -39,7 +39,7 @@ jobs:
           basecmt="${{ steps.last_successful_commit.outputs.commit_hash }}"
           if [ -z "$basecmt" ] || ! git diff --quiet HEAD "$basecmt"
           then
-              echo "RUN DEPENDENCY CHECK BECAUSE DETERMINING PREVIOUS SUCCESSFUL RUN FAILED" 1>&2
+              echo "RUN DEPENDENCY CHECK BECAUSE DETERMINING PREVIOUS SUCCESSFUL RUN FAILED (ref = '$basecmt')" 1>&2
               echo "::set-output name=IS_CHANGED::1"
               exit 0
           fi

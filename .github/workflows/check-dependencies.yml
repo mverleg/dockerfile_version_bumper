@@ -46,7 +46,7 @@ jobs:
           fi
           while IFS= read -r changed_file
           do
-              if expr "$changed_file" : ".*Dockerfile" || expr "$changed_file" : ".*Cargo\..*"
+              if [[ "$changed_file" =~ ".*Dockerfile$" ]] || [[ "$changed_file" =~ "Cargo\." ]]
               then
                   echo "RUN DEPENDENCY CHECK BECAUSE OF $changed_file"
                   echo "::set-output name=IS_CHANGED::1"

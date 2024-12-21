@@ -125,9 +125,7 @@ impl PartialEq for Tag {
 impl Eq for Tag {}
 
 impl PartialOrd for Tag {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.nrs.partial_cmp(&other.nrs)
-    }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
 impl Ord for Tag {

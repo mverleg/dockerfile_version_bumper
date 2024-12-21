@@ -2,11 +2,10 @@ use ::std::path::PathBuf;
 use ::std::process::exit;
 use ::std::time::SystemTime;
 
-use ::clap::StructOpt;
 use ::derive_getters::Getters;
 use ::env_logger;
 use ::tokio;
-
+use ::clap::Parser;
 use ::dockerfile_version_bumper::bump_dockerfiles;
 use ::dockerfile_version_bumper::TagUp;
 
@@ -14,37 +13,36 @@ use ::dockerfile_version_bumper::TagUp;
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-#[derive(Debug, StructOpt, Getters)]
+#[derive(Debug, Parser, Getters)]
 #[structopt(
     name = "dockerfile_version_bumper",
     about = "Simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version."
 )]
 /// CLI arguments. Readme will be updated by release build.
 pub struct Args {
-    #[structopt(
+    #[clap(
         long = "dockerfile",
         short = 'f',
         default_value = "Dockerfile",
-        parse(from_os_str)
     )]
     dockerfiles: Vec<PathBuf>,
-    #[structopt(
+    #[clap(
         long = "parent",
         short = 'p',
         help = "Parent images (FROM lines) base names that should be bumped. If empty, bumps every image in the Dockerfile that is found in the registry."
     )]
     parents: Vec<String>,
-    #[structopt(
+    #[clap(
         long = "major",
         help = "Allow bumping to new major versions (which might be incompatible), which is interpreted as the leading number in the version."
     )]
     bump_major: bool,
-    #[structopt(
+    #[clap(
         long = "dry-run",
         help = "Print the output instead of updating in-place (dry run)."
     )]
     dry_run: bool,
-    #[structopt(
+    #[clap(
         long = "json",
         help = "Print version bumps in json format. Still bumps Dockerfiles unless --dry-run is also given."
     )]
@@ -55,7 +53,7 @@ pub struct Args {
 async fn main() {
     let start = SystemTime::now();
     env_logger::init();
-    let args = Args::from_args();
+    let args = Args::parse();
     match bump_dockerfiles(
         args.dockerfiles(),
         args.parents(),

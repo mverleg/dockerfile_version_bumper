@@ -19,17 +19,17 @@ jemalloc = ["jemallocator"]
 
 [dependencies]
 log = "0.4.22"
-env_logger = "0.9.3"
-clap = { version = "3.2.25", default-features = true, features = ["std", "derive", "unicode"] }
+env_logger = "0.11.6"
+clap = { version = "4.5.23", default-features = true, features = ["std", "derive", "unicode"] }
 regex = "1.11.1"
 lazy_static = "1.5.0"
 tokio = { version = "1.42.0", features = ["full"] }
-reqwest = "0.11.27"
+reqwest = "0.12.9"
 futures = "0.3.31"
-derive-getters = "0.2.1"
-derive-new = "0.5.9"
-itertools = "0.10.5"
-indexmap = "1.9.3"
+derive-getters = "0.5.0"
+derive-new = "0.7.0"
+itertools = "0.13.0"
+indexmap = "2.7.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = { version = "0.5.4", optional = true }

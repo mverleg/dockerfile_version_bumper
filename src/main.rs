@@ -26,25 +26,25 @@ pub struct Args {
         default_value = "Dockerfile",
     )]
     dockerfiles: Vec<PathBuf>,
+    /// Parent images (FROM lines) base names that should be bumped. If empty, bumps every image in the Dockerfile that is found in the registry.
     #[clap(
         long = "parent",
         short = 'p',
-        help = "Parent images (FROM lines) base names that should be bumped. If empty, bumps every image in the Dockerfile that is found in the registry."
     )]
     parents: Vec<String>,
+    /// Allow bumping to new major versions (which might be incompatible), which is interpreted as the leading number in the version.
     #[clap(
         long = "major",
-        help = "Allow bumping to new major versions (which might be incompatible), which is interpreted as the leading number in the version."
     )]
     bump_major: bool,
+    /// Print the output instead of updating in-place (dry run).
     #[clap(
         long = "dry-run",
-        help = "Print the output instead of updating in-place (dry run)."
     )]
     dry_run: bool,
+    /// Print version bumps in json format. Still bumps Dockerfiles unless --dry-run is also given.
     #[clap(
         long = "json",
-        help = "Print version bumps in json format. Still bumps Dockerfiles unless --dry-run is also given."
     )]
     json: bool,
 }
@@ -105,5 +105,59 @@ fn print_tags_text(parent_latest_tags: &[TagUp]) {
         } else {
             println!("{}\t{} -> {}", up.image, up.old_tag, up.new_tag)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::rc::Rc;
+    use indexmap::indexmap;
+    use super::*;
+
+    // Dockerfile version bumper fails with this error:
+    // "Fatal! could not find the version 20221230-6970e9da nor any higher ones"
+    // When the image contain a URL, like
+    // "FROM docker-registry:8080/mverleg/dev-base:20221230-6970e9da"
+    //TODO @mark: ^
+
+    #[test]
+    fn with_repository_url() {
+        
+
+        //TODO @mark:
+        let image = "docker-registry:8080/namespace/image".to_owned();
+        let path = PathBuf::from("/fake/Dockerfile");
+        let tag_str = "1.2.4-alpha";
+        let dockerfile = Rc::new(Dockerfile::new(
+            path.clone(),
+            format!("FROM {}:{} AS build\n", &image, &tag_str),
+        ));
+
+        bump_dockerfiles(
+
+        );
+
+        let tag_pattern = tag_to_re(tag_str).unwrap();
+        let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
+        let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
+
+        let parent = Parent::new(
+            dockerfile,
+            image,
+            tag_pattern,
+            tag_old,
+            " AS build".to_owned(),
+        );
+
+        let tags = updated_dockerfiles_content(&indexmap![
+            parent => tag_new.clone(),
+        ])
+            .unwrap();
+        assert_eq!(
+            tags,
+            indexmap![
+                path => format!("FROM docker-registry:8080/namespace/image:{} AS build\n", &tag_new),
+            ]
+        );
     }
 }

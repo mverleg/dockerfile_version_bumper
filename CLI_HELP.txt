@@ -1,18 +1,12 @@
-dockerfile_version_bumper 0.0.1
+dockerfile_version_bumper 0.2.0
 Simple tool for scanning `Dockerfile`s and switching the image tags that appear in `FROM` to their latest version.
 
-USAGE:
-    dockerfile_version_bumper [FLAGS] [OPTIONS]
+Usage: dockerfile_version_bumper [OPTIONS]
 
-FLAGS:
-        --major      Allow bumping to new major versions (which might be incompatible), which is interpreted as the
-                     leading number in the version.
-        --dry-run    Print the output instead of updating in-place (dry run).
-    -h, --help       Prints help information
-        --json       Print version bumps in json format. Still bumps Dockerfiles unless --dry-run is also given.
-    -V, --version    Prints version information
-
-OPTIONS:
-    -f, --dockerfile <dockerfiles>...     [default: Dockerfile]
-    -p, --parent <parents>...            Parent images (FROM lines) base names that should be bumped. If empty, bumps
-                                         every image in the Dockerfile that is found in the registry.
+Options:
+  -f, --dockerfile <DOCKERFILES>  [default: Dockerfile]
+  -p, --parent <PARENTS>          Parent images (FROM lines) base names that should be bumped. If empty, bumps every image in the Dockerfile that is found in the registry
+      --major                     Allow bumping to new major versions (which might be incompatible), which is interpreted as the leading number in the version
+      --dry-run                   Print the output instead of updating in-place (dry run)
+      --json                      Print version bumps in json format. Still bumps Dockerfiles unless --dry-run is also given
+  -h, --help                      Print help

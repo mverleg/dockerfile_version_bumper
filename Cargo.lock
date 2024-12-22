@@ -254,6 +254,7 @@ dependencies = [
  "log",
  "regex",
  "reqwest",
+ "tempfile",
  "tokio",
 ]
 

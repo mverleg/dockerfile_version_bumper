@@ -222,44 +222,4 @@ mod tests {
             ]
         );
     }
-
-    // Dockerfile version bumper fails with this error:
-    // "Fatal! could not find the version 20221230-6970e9da nor any higher ones"
-    // When the image contain a URL, like
-    // "FROM docker-registry:8080/mverleg/dev-base:20221230-6970e9da"
-    //TODO @mark: ^
-
-    #[test]
-    fn with_repository_url() {
-        //TODO @mark:
-        let image = "docker-registry:8080/namespace/image".to_owned();
-        let path = PathBuf::from("/fake/Dockerfile");
-        let tag_str = "1.2.4-alpha";
-        let dockerfile = Rc::new(Dockerfile::new(
-            path.clone(),
-            format!("FROM {}:{} AS build\n", &image, &tag_str),
-        ));
-        let tag_pattern = tag_to_re(tag_str).unwrap();
-        let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
-        let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
-
-        let parent = Parent::new(
-            dockerfile,
-            image,
-            tag_pattern,
-            tag_old,
-            " AS build".to_owned(),
-        );
-
-        let tags = updated_dockerfiles_content(&indexmap![
-            parent => tag_new.clone(),
-        ])
-            .unwrap();
-        assert_eq!(
-            tags,
-            indexmap![
-                path => format!("FROM docker-registry:8080/namespace/image:{} AS build\n", &tag_new),
-            ]
-        );
-    }
 }

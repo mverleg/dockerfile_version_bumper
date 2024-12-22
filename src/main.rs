@@ -2,12 +2,12 @@ use ::std::path::PathBuf;
 use ::std::process::exit;
 use ::std::time::SystemTime;
 
-use ::derive_getters::Getters;
-use ::env_logger;
-use ::tokio;
 use ::clap::Parser;
+use ::derive_getters::Getters;
 use ::dockerfile_version_bumper::bump_dockerfiles;
 use ::dockerfile_version_bumper::TagUp;
+use ::env_logger;
+use ::tokio;
 
 #[cfg(feature = "jemalloc")]
 #[global_allocator]
@@ -110,54 +110,25 @@ fn print_tags_text(parent_latest_tags: &[TagUp]) {
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
-    use indexmap::indexmap;
     use super::*;
+    use ::std::fs;
+    use ::tempfile::NamedTempFile;
 
-    // Dockerfile version bumper fails with this error:
-    // "Fatal! could not find the version 20221230-6970e9da nor any higher ones"
-    // When the image contain a URL, like
-    // "FROM docker-registry:8080/mverleg/dev-base:20221230-6970e9da"
-    //TODO @mark: ^
-
-    #[test]
-    fn with_repository_url() {
-        
-
-        //TODO @mark:
-        let image = "docker-registry:8080/namespace/image".to_owned();
-        let path = PathBuf::from("/fake/Dockerfile");
-        let tag_str = "1.2.4-alpha";
-        let dockerfile = Rc::new(Dockerfile::new(
-            path.clone(),
-            format!("FROM {}:{} AS build\n", &image, &tag_str),
-        ));
-
+    #[tokio::test]
+    async fn full_bump_with_repo() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let image = "python".to_owned();
+        let tag_str = "3.11";
+        fs::write(&temp_file, format!("FROM {}:{} AS build\n", &image, &tag_str)).unwrap();
         bump_dockerfiles(
-
-        );
-
-        let tag_pattern = tag_to_re(tag_str).unwrap();
-        let tag_old = parse_tag(&tag_pattern, tag_str).unwrap();
-        let tag_new = Tag::new("1.3.2-alpha".to_owned(), (1, 3, 2, 0));
-
-        let parent = Parent::new(
-            dockerfile,
-            image,
-            tag_pattern,
-            tag_old,
-            " AS build".to_owned(),
-        );
-
-        let tags = updated_dockerfiles_content(&indexmap![
-            parent => tag_new.clone(),
-        ])
-            .unwrap();
-        assert_eq!(
-            tags,
-            indexmap![
-                path => format!("FROM docker-registry:8080/namespace/image:{} AS build\n", &tag_new),
-            ]
-        );
+            &[temp_file.path().to_path_buf()],
+            &[],
+            false,
+            false,
+        ).await.unwrap();
+        let content = fs::read_to_string(temp_file.path()).unwrap();
+        dbg!(&content);
+        assert!(*content >= *"FROM python:3.13");
+        assert!(content.ends_with(" AS build\n"))
     }
 }

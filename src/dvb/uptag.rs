@@ -42,7 +42,7 @@ pub async fn find_latest_tag(
 fn url_for_parent(parent: Parent) -> (String, Parent) {
     (
         format!(
-            "https://registry.hub.docker.com/v1/repositories/{}/tags",
+            "https://hub.docker.com/v2/namespaces/library/repositories/{}/tags?page_size=1000",
             &parent.image_name()
         ),
         parent,
@@ -72,8 +72,9 @@ fn find_highest(parent: &Parent, data: &str, bump_major: bool) -> Result<Tag, St
         .next()
         .ok_or_else(|| {
             format!(
-                "could not find the version {} nor any higher ones",
-                parent.tag()
+                "could not find the version {} nor any higher ones for {}",
+                parent.tag(),
+                &parent.image_name(),
             )
         })?;
     Ok(tag)

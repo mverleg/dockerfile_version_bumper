@@ -20,6 +20,10 @@ chmod u+x dockerfile_version_bumper
 
 You can change the platform (`x86_64` in the example), pin a specific version (latest in the example), or add any of the flags described below.
 
+## Limitation
+
+Does not support custom repository urls, like `my-repo:8080/user/image`. This is because the url to retrieve tags from isn't known for repos in general, just Dockerhub.
+
 ## CLI
 
 `dockerfile_version_bumper` is a small command-line executable that you can run locally or in a CI pipeline.
